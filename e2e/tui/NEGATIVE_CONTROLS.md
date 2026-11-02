@@ -12064,3 +12064,15 @@ Run on 2026-11-02, each control against the branch head with one change:
 | Another machine gets the pinned files or nothing | the pin check cut | "install from plugins.lock after the asset changed" | **caught** |
 | The same release is up to date | the tag check cut | "update with the same tuios" | **caught** |
 
+## Quick look reads rich Markdown
+
+| Control: what was cut | Where it fails | Verdict |
+| --- | --- | --- |
+| Tags go | "the document did not read as Markdown" | **caught** |
+| Scripts go with their text | "the document did not read as Markdown" | **caught** |
+| Comments go | "the document did not read as Markdown" | **caught** |
+| Alerts | "the document did not read as Markdown" | **caught** |
+| Mermaid | "the document did not read as Markdown" | **caught** |
+| Sections start closed | "the document did not read as Markdown" | **caught** |
+| Enter opens them | "enter did not open the section" | **caught** |
+| Arrow heads swapped for kept glyphs | "the diagram lost its arrow head" | **caught** |
