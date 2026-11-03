@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -11,6 +10,7 @@ import (
 	"text/tabwriter"
 
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 	"github.com/Gaurav-Gosain/tuios/internal/plural"
 	"github.com/Gaurav-Gosain/tuios/internal/review"
 	"github.com/spf13/cobra"
@@ -180,7 +180,7 @@ func runReview(w io.Writer, sessionName, window string, o reviewOptions, jsonOut
 		return printVerbResultOn(t, raw, true)
 	}
 	var res reviewDiffResult
-	if err := json.Unmarshal(raw, &res); err != nil {
+	if err := jsonx.Unmarshal(raw, &res); err != nil {
 		return errfmt.Errorf("failed to parse response: %w", err)
 	}
 	return printReview(w, res, t.on(), o.stat)
@@ -473,7 +473,7 @@ func runReviewNote(w io.Writer, sessionName, window string, params map[string]an
 		Removed int           `json:"removed"`
 		Notes   []review.Note `json:"notes"`
 	}
-	if err := json.Unmarshal(raw, &res); err != nil {
+	if err := jsonx.Unmarshal(raw, &res); err != nil {
 		return errfmt.Errorf("failed to parse response: %w", err)
 	}
 	switch params["action"] {
@@ -588,7 +588,7 @@ func runReviewSend(w io.Writer, sessionName, window string, ids []string, now, j
 		Withheld   []string `json:"withheld"`
 		Reason     string   `json:"withheld_reason"`
 	}
-	if err := json.Unmarshal(raw, &res); err != nil {
+	if err := jsonx.Unmarshal(raw, &res); err != nil {
 		return errfmt.Errorf("failed to parse response: %w", err)
 	}
 	fmt.Fprintf(w, "%d review %s in one message. %s\n", res.Notes, plural.Word(res.Notes, "note", "notes"),

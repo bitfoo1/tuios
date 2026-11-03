@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/base64"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -18,6 +17,7 @@ import (
 	"github.com/Gaurav-Gosain/tuios/internal/atomicfile"
 	"github.com/Gaurav-Gosain/tuios/internal/config"
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 	"github.com/Gaurav-Gosain/tuios/internal/lookshare"
 	"github.com/Gaurav-Gosain/tuios/internal/session"
 )
@@ -223,9 +223,9 @@ func routeLookShare(sessionName, name, author string) (lookShareResult, error) {
 		return lookShareResult{}, errfmt.Errorf("tuios cannot share the look: %s", result.Message)
 	}
 	var res lookShareResult
-	data, err := json.Marshal(result.Data)
+	data, err := jsonx.Marshal(result.Data)
 	if err == nil {
-		err = json.Unmarshal(data, &res)
+		err = jsonx.Unmarshal(data, &res)
 	}
 	return res, err
 }
@@ -292,7 +292,7 @@ func shotHere() string {
 	var res struct {
 		Path string `json:"path"`
 	}
-	if json.Unmarshal(raw, &res) != nil {
+	if jsonx.Unmarshal(raw, &res) != nil {
 		return ""
 	}
 	return res.Path

@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 )
 
 // The tree stream: a folder's small files in one stream.
@@ -113,14 +114,14 @@ func readTreeLine(br *bufio.Reader, v any) error {
 	if err != nil {
 		return err
 	}
-	if err := json.Unmarshal(line, v); err != nil {
+	if err := jsonx.Unmarshal(line, v); err != nil {
 		return errfmt.Errorf("a tree stream line did not decode: %w", err)
 	}
 	return nil
 }
 
 func writeTreeLine(w io.Writer, v any) error {
-	line, err := json.Marshal(v)
+	line, err := jsonx.Marshal(v)
 	if err != nil {
 		return err
 	}

@@ -14,6 +14,7 @@ import (
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 	"github.com/Gaurav-Gosain/tuios/internal/ghpr"
 	"github.com/Gaurav-Gosain/tuios/internal/harness"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 	"github.com/Gaurav-Gosain/tuios/internal/plural"
 	"github.com/Gaurav-Gosain/tuios/internal/session"
 	"github.com/Gaurav-Gosain/tuios/internal/worktree"
@@ -502,7 +503,7 @@ func runWorktreeNew(branch, repo, base, name, agent, host string, clone, detach,
 		Warning       string `json:"warning"`
 		HookError     string `json:"hook_error"`
 	}
-	if err := json.Unmarshal(raw, &res); err != nil {
+	if err := jsonx.Unmarshal(raw, &res); err != nil {
 		return errfmt.Errorf("failed to parse response: %w", err)
 	}
 	if res.Cloned {
@@ -557,7 +558,7 @@ func listWorktreesOn(host, repo, group string, changes bool) ([]worktreeRow, err
 	var res struct {
 		Worktrees []worktreeRow `json:"worktrees"`
 	}
-	if err := json.Unmarshal(raw, &res); err != nil {
+	if err := jsonx.Unmarshal(raw, &res); err != nil {
 		return nil, errfmt.Errorf("failed to parse response: %w", err)
 	}
 	return res.Worktrees, nil
@@ -669,7 +670,7 @@ func runWorktreeRemove(target string, stash, force, keepSession, jsonOutput bool
 		return printVerbResultOn(t, raw, true)
 	}
 	var res removedWorktree
-	if err := json.Unmarshal(raw, &res); err != nil {
+	if err := jsonx.Unmarshal(raw, &res); err != nil {
 		return errfmt.Errorf("failed to parse response: %w", err)
 	}
 	fmt.Println(res.sentences())
@@ -912,7 +913,7 @@ func runFan(o fanOptions, wait, jsonOutput bool) error {
 		} `json:"task"`
 		TaskNote string `json:"task_note"`
 	}
-	if err := json.Unmarshal(raw, &res); err != nil {
+	if err := jsonx.Unmarshal(raw, &res); err != nil {
 		return errfmt.Errorf("failed to parse response: %w", err)
 	}
 	if !jsonOutput {
@@ -1044,7 +1045,7 @@ func runFanKeep(target string, stash, force, jsonOutput bool, merge fanKeepMerge
 		Removed []json.RawMessage `json:"removed"`
 		Merge   *shipMergeResult  `json:"merge"`
 	}
-	if err := json.Unmarshal(raw, &res); err != nil {
+	if err := jsonx.Unmarshal(raw, &res); err != nil {
 		return errfmt.Errorf("failed to parse response: %w", err)
 	}
 	outcomes := make([]fanKeepOutcome, 0, len(res.Removed))
@@ -1055,7 +1056,7 @@ func runFanKeep(target string, stash, force, jsonOutput bool, merge fanKeepMerge
 			Note    string `json:"note"`
 			Code    string `json:"code"`
 		}
-		if err := json.Unmarshal(entry, &head); err != nil {
+		if err := jsonx.Unmarshal(entry, &head); err != nil {
 			return errfmt.Errorf("failed to parse response: %w", err)
 		}
 		if !head.Removed {
@@ -1067,7 +1068,7 @@ func runFanKeep(target string, stash, force, jsonOutput bool, merge fanKeepMerge
 			continue
 		}
 		var removed removedWorktree
-		if err := json.Unmarshal(entry, &removed); err != nil {
+		if err := jsonx.Unmarshal(entry, &removed); err != nil {
 			return errfmt.Errorf("failed to parse response: %w", err)
 		}
 		outcomes = append(outcomes, fanKeepOutcome{Session: head.Session, Removed: true, Note: removed.sentences()})
@@ -1151,7 +1152,7 @@ func runFanKeepLoop(host, winner string, stash, force, jsonOutput bool) error {
 			continue
 		}
 		var res removedWorktree
-		if err := json.Unmarshal(raw, &res); err != nil {
+		if err := jsonx.Unmarshal(raw, &res); err != nil {
 			return errfmt.Errorf("failed to parse response: %w", err)
 		}
 		outcomes = append(outcomes, fanKeepOutcome{Session: r.Session, Removed: true, Note: res.sentences()})

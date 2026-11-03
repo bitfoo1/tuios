@@ -12,6 +12,7 @@ import (
 
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 	"github.com/Gaurav-Gosain/tuios/internal/federation"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 	"github.com/Gaurav-Gosain/tuios/internal/session"
 )
 
@@ -113,7 +114,7 @@ func runListAllWindows(sessionName string, all, allHosts bool, text int, jsonOut
 			var res struct {
 				Hosts []hostSessionsEntry `json:"hosts"`
 			}
-			if json.Unmarshal(raw, &res) == nil {
+			if jsonx.Unmarshal(raw, &res) == nil {
 				for _, h := range res.Hosts {
 					if h.Host == federation.LocalHostName {
 						continue
@@ -186,7 +187,7 @@ func listSessionNames(client *listConn) ([]string, error) {
 			Name string `json:"name"`
 		} `json:"sessions"`
 	}
-	if err := json.Unmarshal(raw, &res); err != nil {
+	if err := jsonx.Unmarshal(raw, &res); err != nil {
 		return nil, errfmt.Errorf("failed to parse list-sessions: %w", err)
 	}
 	names := make([]string, 0, len(res.Sessions))
@@ -217,7 +218,7 @@ func listSessionPanes(client *listConn, host, name string, text int) ([]listedPa
 			AgentState string `json:"agent_state"`
 		} `json:"windows"`
 	}
-	if err := json.Unmarshal(raw, &list); err != nil {
+	if err := jsonx.Unmarshal(raw, &list); err != nil {
 		return nil, []listError{{Host: host, Session: name, Error: "could not read the window list"}}
 	}
 	if list.Session != "" {
@@ -262,7 +263,7 @@ func listWorkspaceNames(client *listConn, name string) (map[int]string, string) 
 		Name  string            `json:"session_name"`
 		Names map[string]string `json:"workspace_names"`
 	}
-	if json.Unmarshal(raw, &info) != nil {
+	if jsonx.Unmarshal(raw, &info) != nil {
 		return out, ""
 	}
 	for k, v := range info.Names {
@@ -285,7 +286,7 @@ func listPaneText(client *listConn, sessionName, window string, lines int) ([]st
 	var res struct {
 		Content string `json:"content"`
 	}
-	if json.Unmarshal(raw, &res) != nil {
+	if jsonx.Unmarshal(raw, &res) != nil {
 		return nil, "could not read the capture"
 	}
 	out := strings.Split(ansi.Strip(res.Content), "\n")

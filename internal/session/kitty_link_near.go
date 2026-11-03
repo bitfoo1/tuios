@@ -16,6 +16,7 @@ import (
 
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 	"github.com/Gaurav-Gosain/tuios/internal/federation"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 )
 
 // Kitty images named by a path, from a pane on another machine: the near
@@ -295,8 +296,8 @@ func (p *remotePane) fetchKittyMedium(token, id string) (io.ReadCloser, int64, e
 	if err != nil {
 		return nil, 0, err
 	}
-	params, _ := json.Marshal(map[string]string{"pane": p.id, "token": token, "id": id})
-	req, _ := json.Marshal(verbRequest{ID: json.RawMessage(`1`), Verb: "pane-kitty-medium", Params: params})
+	params, _ := jsonx.Marshal(map[string]string{"pane": p.id, "token": token, "id": id})
+	req, _ := jsonx.Marshal(verbRequest{ID: json.RawMessage(`1`), Verb: "pane-kitty-medium", Params: params})
 	type reply struct {
 		Result *struct {
 			Size       int64 `json:"size"`
@@ -314,7 +315,7 @@ func (p *remotePane) fetchKittyMedium(token, id string) (io.ReadCloser, int64, e
 		}
 		line, err := readLimitedLine(br, maxRemotePaneReply)
 		if err == nil {
-			err = json.Unmarshal(line, &resp)
+			err = jsonx.Unmarshal(line, &resp)
 		}
 		got <- err
 	}()

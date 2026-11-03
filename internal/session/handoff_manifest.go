@@ -5,12 +5,12 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/gob"
-	"encoding/json"
 	"errors"
 	"io"
 	"sync/atomic"
 
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 )
 
 // The handoff manifest: what one daemon image writes down for the image it
@@ -152,7 +152,7 @@ func (mw *manifestWriter) record(kind byte, payload []byte) error {
 }
 
 func (mw *manifestWriter) json(kind byte, v any) error {
-	data, err := json.Marshal(v)
+	data, err := jsonx.Marshal(v)
 	if err != nil {
 		return err
 	}
@@ -207,13 +207,13 @@ func readHandoffManifest(r io.Reader) (*handoffManifest, error) {
 		var err error
 		switch kind {
 		case handoffRecHeader:
-			err = json.Unmarshal(payload, &m.Header)
+			err = jsonx.Unmarshal(payload, &m.Header)
 			if err == nil {
 				err = checkHandoffVersion(m.Header.Version)
 			}
 		case handoffRecSession:
 			var s handoffSession
-			if err = json.Unmarshal(payload, &s); err == nil {
+			if err = jsonx.Unmarshal(payload, &s); err == nil {
 				if s.State == nil {
 					err = errors.New("a session record has no state")
 				}
@@ -228,7 +228,7 @@ func readHandoffManifest(r io.Reader) (*handoffManifest, error) {
 			// A record from an image without fallback_fd names its binary
 			// by path; left at zero, the field would name stdin.
 			m.Daemon.FallbackFD = -1
-			err = json.Unmarshal(payload, &m.Daemon)
+			err = jsonx.Unmarshal(payload, &m.Daemon)
 		case handoffRecEnd:
 			m.Size = read.Load() - int64(br.Buffered())
 			return m, nil

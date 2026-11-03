@@ -1,7 +1,6 @@
 package theme
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -15,6 +14,7 @@ import (
 
 	"charm.land/lipgloss/v2"
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 	"github.com/Gaurav-Gosain/tuios/internal/overlay"
 	"github.com/adrg/xdg"
 	"github.com/charmbracelet/x/ansi"
@@ -316,7 +316,7 @@ func loadGlyphSetFile(path string) (*GlyphSet, []string, error) {
 		return nil, nil, errfmt.Errorf("failed to read glyph set: %w", err)
 	}
 	var set GlyphSet
-	if err := json.Unmarshal(data, &set); err != nil {
+	if err := jsonx.Unmarshal(data, &set); err != nil {
 		return nil, nil, errfmt.Errorf("failed to parse glyph set JSON: %w", err)
 	}
 	if set.ID == "" {

@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 	"github.com/Gaurav-Gosain/tuios/internal/pastebuf"
 	"github.com/Gaurav-Gosain/tuios/internal/plural"
 	"github.com/spf13/cobra"
@@ -239,7 +240,7 @@ func completeBufferNames(_ *cobra.Command, _ []string, _ string) ([]string, cobr
 		return nil, cobra.ShellCompDirectiveNoFileComp
 	}
 	var res bufferListing
-	if json.Unmarshal(raw, &res) != nil {
+	if jsonx.Unmarshal(raw, &res) != nil {
 		return nil, cobra.ShellCompDirectiveNoFileComp
 	}
 	names := make([]string, 0, len(res.Buffers))
@@ -280,7 +281,7 @@ func runListBuffers(jsonOutput bool) error {
 		return printVerbResult(raw, true)
 	}
 	var res bufferListing
-	if err := json.Unmarshal(raw, &res); err != nil {
+	if err := jsonx.Unmarshal(raw, &res); err != nil {
 		return errfmt.Errorf("failed to parse response: %w", err)
 	}
 	if len(res.Buffers) == 0 {
@@ -307,7 +308,7 @@ func bufferContent(raw json.RawMessage) (name, data string, version uint64, err 
 		DataB64 string `json:"data_b64"`
 		Version uint64 `json:"version"`
 	}
-	if err := json.Unmarshal(raw, &res); err != nil {
+	if err := jsonx.Unmarshal(raw, &res); err != nil {
 		return "", "", 0, errfmt.Errorf("failed to parse response: %w", err)
 	}
 	data = res.Data

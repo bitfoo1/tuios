@@ -3,13 +3,13 @@ package session
 import (
 	"bufio"
 	"encoding/binary"
-	"encoding/json"
 	"io"
 	"net"
 	"sync"
 	"time"
 
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 )
 
 // The client end of stream-pane, for a viewer that is not a tuios client.
@@ -67,7 +67,7 @@ func (c *VerbClient) OpenPaneStream(params map[string]any) (*PaneStream, PaneStr
 	if err != nil {
 		return nil, reply, err
 	}
-	if err := json.Unmarshal(raw, &reply); err != nil {
+	if err := jsonx.Unmarshal(raw, &reply); err != nil {
 		return nil, reply, errfmt.Errorf("failed to read the stream-pane reply: %w", err)
 	}
 	c.callMu.Lock()

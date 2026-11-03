@@ -4,7 +4,6 @@ package tmuxcompat
 
 import (
 	"bufio"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -19,6 +18,7 @@ import (
 	"time"
 
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 	"github.com/Gaurav-Gosain/tuios/internal/procinfo"
 	"github.com/Gaurav-Gosain/tuios/internal/shimlink"
 	"golang.org/x/term"
@@ -292,7 +292,7 @@ func acceptRespawns(ln net.Listener, window string, authorize func(int, uint64) 
 				return
 			}
 			var req RespawnRequest
-			if err := json.Unmarshal(line, &req); err != nil {
+			if err := jsonx.Unmarshal(line, &req); err != nil {
 				writeReply(conn, errors.New("the request is not JSON"))
 				return
 			}
@@ -330,7 +330,7 @@ func writeReply(w io.Writer, err error) {
 	if err != nil {
 		r.Error = err.Error()
 	}
-	line, _ := json.Marshal(r)
+	line, _ := jsonx.Marshal(r)
 	_, _ = w.Write(append(line, '\n'))
 }
 

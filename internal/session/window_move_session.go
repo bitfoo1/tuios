@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 )
 
 // Moving a window to another session.
@@ -549,14 +550,14 @@ func (d *Daemon) followMovedWindow(params json.RawMessage) json.RawMessage {
 		return params
 	}
 	var m map[string]json.RawMessage
-	if err := json.Unmarshal(params, &m); err != nil {
+	if err := jsonx.Unmarshal(params, &m); err != nil {
 		return params
 	}
 	var session, window string
-	if raw, ok := m["session"]; !ok || json.Unmarshal(raw, &session) != nil || session == "" {
+	if raw, ok := m["session"]; !ok || jsonx.Unmarshal(raw, &session) != nil || session == "" {
 		return params
 	}
-	if raw, ok := m["window"]; !ok || json.Unmarshal(raw, &window) != nil || window == "" {
+	if raw, ok := m["window"]; !ok || jsonx.Unmarshal(raw, &window) != nil || window == "" {
 		return params
 	}
 	v, ok := movedWindows.Load(window)
@@ -576,8 +577,8 @@ func (d *Daemon) followMovedWindow(params json.RawMessage) json.RawMessage {
 	if holder == nil || holder == named {
 		return params
 	}
-	m["session"], _ = json.Marshal(holder.Name())
-	out, err := json.Marshal(m)
+	m["session"], _ = jsonx.Marshal(holder.Name())
+	out, err := jsonx.Marshal(m)
 	if err != nil {
 		return params
 	}

@@ -20,6 +20,7 @@ import (
 	"github.com/pelletier/go-toml/v2"
 
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 	"github.com/Gaurav-Gosain/tuios/internal/listnav"
 	"github.com/Gaurav-Gosain/tuios/internal/theme"
 )
@@ -150,7 +151,7 @@ type lookFeed struct {
 // each entry, so every text is cleaned and every colour checked.
 func parseLookFeed(data []byte) ([]galleryLook, error) {
 	var feed lookFeed
-	if err := json.Unmarshal(data, &feed); err != nil {
+	if err := jsonx.Unmarshal(data, &feed); err != nil {
 		return nil, err
 	}
 	if feed.Version != 1 {

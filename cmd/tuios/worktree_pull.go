@@ -5,13 +5,13 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
 	"time"
 
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 	"github.com/Gaurav-Gosain/tuios/internal/plural"
 	"github.com/Gaurav-Gosain/tuios/internal/worktree"
 )
@@ -58,7 +58,7 @@ func openTransfer(t *verbTarget, session string, full bool) (bundleReply, error)
 	if err != nil {
 		return first, t.explain("bundle-worktree", err)
 	}
-	if err := json.Unmarshal(raw, &first); err != nil {
+	if err := jsonx.Unmarshal(raw, &first); err != nil {
 		return first, errfmt.Errorf("failed to parse response: %w", err)
 	}
 	return first, nil
@@ -96,7 +96,7 @@ func readTransfer(t *verbTarget, first bundleReply) ([]byte, error) {
 			return nil, t.explain("bundle-worktree", err)
 		}
 		reply = bundleReply{}
-		if err := json.Unmarshal(raw, &reply); err != nil {
+		if err := jsonx.Unmarshal(raw, &reply); err != nil {
 			return nil, errfmt.Errorf("failed to parse response: %w", err)
 		}
 	}
@@ -218,7 +218,7 @@ func runWorktreePull(target, repo, branch, name string, detach, jsonOutput bool)
 		Session string `json:"session"`
 		Path    string `json:"path"`
 	}
-	if err := json.Unmarshal(raw, &made); err != nil {
+	if err := jsonx.Unmarshal(raw, &made); err != nil {
 		return errfmt.Errorf("failed to parse response: %w", err)
 	}
 

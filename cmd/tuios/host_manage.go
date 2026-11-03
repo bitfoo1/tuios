@@ -13,6 +13,7 @@ import (
 	"github.com/Gaurav-Gosain/tuios/internal/config"
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 	"github.com/Gaurav-Gosain/tuios/internal/federation"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 	"github.com/Gaurav-Gosain/tuios/internal/plural"
 	"github.com/Gaurav-Gosain/tuios/internal/session"
 	"github.com/Gaurav-Gosain/tuios/internal/units"
@@ -634,7 +635,7 @@ func describeConfigApplied(raw []byte) string {
 		Changes       []string `json:"changes"`
 		DroppedKeys   []string `json:"dropped_keys"`
 	}
-	if err := json.Unmarshal(raw, &res); err != nil {
+	if err := jsonx.Unmarshal(raw, &res); err != nil {
 		return "The daemon applied config.toml.\n"
 	}
 	var b strings.Builder
@@ -686,12 +687,12 @@ func runHostSpeed(name string, jsonOut bool) error {
 		Up    float64 `json:"up"`
 		Down  float64 `json:"down"`
 	}
-	if err := json.Unmarshal(raw, &r); err != nil {
+	if err := jsonx.Unmarshal(raw, &r); err != nil {
 		return err
 	}
 	if jsonOut {
 		var v any
-		_ = json.Unmarshal(raw, &v)
+		_ = jsonx.Unmarshal(raw, &v)
 		outputJSON(v)
 		return nil
 	}

@@ -10,6 +10,7 @@ import (
 
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 	"github.com/Gaurav-Gosain/tuios/internal/federation"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 )
 
 // The proxy's half of a link connection: `tuios stdio-proxy` calls
@@ -113,7 +114,7 @@ func dialLinkSocket(path, peer string, pinned bool, agent string) (net.Conn, err
 // connection: the daemon may start the next reply only after the hub's first
 // request, but a read-ahead buffer here would still be the wrong owner of it.
 func linkHandshake(conn net.Conn, peer string, pinned bool, agent string) (*verbError, error) {
-	req, err := json.Marshal(verbRequest{
+	req, err := jsonx.Marshal(verbRequest{
 		ID:     json.RawMessage(`0`),
 		Verb:   linkPolicyVerb,
 		Params: mustJSON(linkPeerParams(peer, pinned, agent)),
@@ -133,7 +134,7 @@ func linkHandshake(conn net.Conn, peer string, pinned bool, agent string) (*verb
 	var resp struct {
 		Error *verbError `json:"error"`
 	}
-	if err := json.Unmarshal(line, &resp); err != nil {
+	if err := jsonx.Unmarshal(line, &resp); err != nil {
 		return nil, errfmt.Errorf("the daemon's answer to link-peer cannot be read: %w", err)
 	}
 	return resp.Error, nil
@@ -176,7 +177,7 @@ func daemonHoldsLinkPolicy(socketPath string) bool {
 		return false
 	}
 	defer func() { _ = conn.Close() }()
-	req, _ := json.Marshal(verbRequest{ID: json.RawMessage(`0`), Verb: "hello"})
+	req, _ := jsonx.Marshal(verbRequest{ID: json.RawMessage(`0`), Verb: "hello"})
 	_ = conn.SetDeadline(time.Now().Add(linkDialTimeout))
 	if _, err := conn.Write(append(req, '\n')); err != nil {
 		return false
@@ -190,7 +191,7 @@ func daemonHoldsLinkPolicy(socketPath string) bool {
 			LinkPolicy bool `json:"link_policy"`
 		} `json:"result"`
 	}
-	return json.Unmarshal(line, &resp) == nil && resp.Result.LinkPolicy
+	return jsonx.Unmarshal(line, &resp) == nil && resp.Result.LinkPolicy
 }
 
 // ValidLinkPeerName reports whether name can be a peer name, for stdio-proxy's

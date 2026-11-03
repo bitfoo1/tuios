@@ -3,7 +3,6 @@ package tmuxcompat
 import (
 	"bufio"
 	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -13,6 +12,7 @@ import (
 	"time"
 
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 )
 
 // Control mode (tmux -C and -CC).
@@ -417,7 +417,7 @@ func (c *control) loop() {
 				Session string `json:"session"`
 				Window  string `json:"window"`
 			}
-			if json.Unmarshal(ev, &e) != nil || e.Type != "output" || e.Window == "" {
+			if jsonx.Unmarshal(ev, &e) != nil || e.Type != "output" || e.Window == "" {
 				continue
 			}
 			c.pending[e.Window] = true

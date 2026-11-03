@@ -2,7 +2,6 @@ package tmuxcompat
 
 import (
 	"encoding/hex"
-	"encoding/json"
 	"errors"
 	"os"
 	"path/filepath"
@@ -11,6 +10,7 @@ import (
 
 	"github.com/Gaurav-Gosain/tuios/internal/atomicfile"
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 	"github.com/Gaurav-Gosain/tuios/internal/sortx"
 )
 
@@ -70,7 +70,7 @@ func (s *Shim) readEnv(scope string) ([]envVar, error) {
 		return nil, err
 	}
 	var list []envVar
-	if err := json.Unmarshal(data, &list); err != nil {
+	if err := jsonx.Unmarshal(data, &list); err != nil {
 		return nil, errfmt.Errorf("read %s: %w", path, err)
 	}
 	return list, nil
@@ -93,7 +93,7 @@ func (s *Shim) writeEnv(scope string, list []envVar) error {
 	if err := EnsureDir(dir); err != nil {
 		return err
 	}
-	data, err := json.Marshal(list)
+	data, err := jsonx.Marshal(list)
 	if err != nil {
 		return err
 	}

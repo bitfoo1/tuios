@@ -10,6 +10,7 @@ import (
 
 	"github.com/Gaurav-Gosain/tuios/internal/config"
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 )
 
 // listClients prints one client for each session a tuios client is attached
@@ -184,7 +185,7 @@ func (s *Shim) daemonOption(params map[string]any, v any) bool {
 	var res struct {
 		Value json.RawMessage `json:"value"`
 	}
-	return json.Unmarshal(raw, &res) == nil && json.Unmarshal(res.Value, v) == nil
+	return jsonx.Unmarshal(raw, &res) == nil && jsonx.Unmarshal(res.Value, v) == nil
 }
 
 // setWindowSize is set-option window-size: it sets the session's
@@ -345,7 +346,7 @@ func (s *Shim) newSession(name string, args []string) (string, []string, error) 
 		Session  string `json:"session"`
 		WindowID string `json:"window_id"`
 	}
-	if err := json.Unmarshal(raw, &res); err != nil || res.Session == "" {
+	if err := jsonx.Unmarshal(raw, &res); err != nil || res.Session == "" {
 		return OutcomeError, detail, errors.New("create session failed: new-session returned no session")
 	}
 	s.created = res.Session

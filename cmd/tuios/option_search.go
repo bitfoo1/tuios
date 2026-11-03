@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 	"github.com/Gaurav-Gosain/tuios/internal/plural"
 	"github.com/Gaurav-Gosain/tuios/internal/sortx"
 	"github.com/Gaurav-Gosain/tuios/pkg/fuzzy"
@@ -74,12 +75,12 @@ func printOptionSearch(w io.Writer, raw json.RawMessage, query string, jsonOutpu
 	var res struct {
 		Options []json.RawMessage `json:"options"`
 	}
-	if err := json.Unmarshal(raw, &res); err != nil {
+	if err := jsonx.Unmarshal(raw, &res); err != nil {
 		return errfmt.Errorf("failed to parse response: %w", err)
 	}
 	rows := make([]optionRow, len(res.Options))
 	for i, o := range res.Options {
-		if err := json.Unmarshal(o, &rows[i]); err != nil {
+		if err := jsonx.Unmarshal(o, &rows[i]); err != nil {
 			return errfmt.Errorf("failed to parse response: %w", err)
 		}
 	}

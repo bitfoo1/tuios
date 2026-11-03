@@ -14,6 +14,7 @@ import (
 
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 	"github.com/Gaurav-Gosain/tuios/internal/federation"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 )
 
 // The fleet: this daemon following the agents of every linked host.
@@ -423,7 +424,7 @@ func (f *hostFleet) follow(ctx context.Context, h *fleetHost) error {
 			return err
 		}
 		var ev fleetEvent
-		if json.Unmarshal(line, &ev) != nil {
+		if jsonx.Unmarshal(line, &ev) != nil {
 			continue
 		}
 		if ev.Type == EventGap {
@@ -614,11 +615,11 @@ type fleetConn struct {
 // the connection, which is what the pump's context does.
 func (c *fleetConn) call(verb string, params any, budget time.Duration) (json.RawMessage, error) {
 	c.nextID++
-	raw, err := json.Marshal(params)
+	raw, err := jsonx.Marshal(params)
 	if err != nil {
 		return nil, err
 	}
-	req, err := json.Marshal(verbRequest{ID: json.RawMessage(fmt.Sprint(c.nextID)), Verb: verb, Params: raw})
+	req, err := jsonx.Marshal(verbRequest{ID: json.RawMessage(fmt.Sprint(c.nextID)), Verb: verb, Params: raw})
 	if err != nil {
 		return nil, err
 	}
@@ -637,7 +638,7 @@ func (c *fleetConn) call(verb string, params any, budget time.Duration) (json.Ra
 		Result json.RawMessage `json:"result"`
 		Error  *verbError      `json:"error"`
 	}
-	if err := json.Unmarshal(line, &resp); err != nil {
+	if err := jsonx.Unmarshal(line, &resp); err != nil {
 		return nil, errfmt.Errorf("the host sent an answer this build cannot read: %w", err)
 	}
 	if resp.Error != nil {
@@ -674,7 +675,7 @@ func (c *fleetConn) listAttention() (fleetListing, error) {
 		return fleetListing{}, err
 	}
 	var l fleetListing
-	if err := json.Unmarshal(raw, &l); err != nil {
+	if err := jsonx.Unmarshal(raw, &l); err != nil {
 		return fleetListing{}, errfmt.Errorf("the host sent an Inbox this build cannot read: %w", err)
 	}
 	if l.BootID == "" {

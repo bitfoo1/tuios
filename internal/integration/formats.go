@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 	"github.com/Gaurav-Gosain/tuios/internal/lazyre"
 )
 
@@ -111,7 +112,7 @@ func flatManaged(root *orderedObject) ([]managedEntry, error) {
 			var h struct {
 				Command string `json:"command"`
 			}
-			if json.Unmarshal(item, &h) == nil && isManagedCommand(h.Command) {
+			if jsonx.Unmarshal(item, &h) == nil && isManagedCommand(h.Command) {
 				out = append(out, managedEntry{Event: event, Command: h.Command})
 			}
 		}
@@ -146,7 +147,7 @@ func (f flatHooks) apply(t *Target, have []byte, tuios string, install bool) ([]
 			var h struct {
 				Command string `json:"command"`
 			}
-			if json.Unmarshal(item, &h) == nil && isManagedCommand(h.Command) {
+			if jsonx.Unmarshal(item, &h) == nil && isManagedCommand(h.Command) {
 				removedAny = true
 				continue
 			}

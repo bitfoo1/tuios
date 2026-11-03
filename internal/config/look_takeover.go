@@ -14,6 +14,7 @@ import (
 	"strings"
 
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 	"github.com/Gaurav-Gosain/tuios/internal/sortx"
 )
 
@@ -106,7 +107,7 @@ func readLookSaved(mainPath string) (*lookSaved, error) {
 		return nil, broken(err.Error())
 	}
 	var s lookSaved
-	if err := json.Unmarshal(data, &s); err != nil {
+	if err := jsonx.Unmarshal(data, &s); err != nil {
 		return nil, broken(err.Error())
 	}
 	if s.Version != lookSavedVersion {

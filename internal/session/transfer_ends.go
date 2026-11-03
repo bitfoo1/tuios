@@ -16,6 +16,7 @@ import (
 
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 	"github.com/Gaurav-Gosain/tuios/internal/federation"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 )
 
 // The two ends of a copy: this machine's disk, read directly, or a host's,
@@ -243,7 +244,7 @@ func (e fileEnd) openRead(ctx context.Context, path string, off int64, compress 
 		Compressed bool  `json:"compressed"`
 		Sum        bool  `json:"sum"`
 	}
-	if err := json.Unmarshal(raw, &r); err != nil {
+	if err := jsonx.Unmarshal(raw, &r); err != nil {
 		_ = c.Close()
 		return nil, err
 	}
@@ -272,7 +273,7 @@ func (e fileEnd) openRead(ctx context.Context, path string, off int64, compress 
 			SHA256 string `json:"sha256"`
 			Error  string `json:"error"`
 		}
-		if err := json.Unmarshal(line, &t); err != nil {
+		if err := jsonx.Unmarshal(line, &t); err != nil {
 			return "", err
 		}
 		if t.Error != "" {
@@ -393,7 +394,7 @@ func writeReplyError(line []byte, host string, want int64) error {
 		Error    string `json:"error"`
 		Code     string `json:"code"`
 	}
-	if err := json.Unmarshal(line, &out); err != nil {
+	if err := jsonx.Unmarshal(line, &out); err != nil {
 		return err
 	}
 	if out.Error != "" {
@@ -534,7 +535,7 @@ func (e fileEnd) walk(ctx context.Context, path string) (walkResult, error) {
 		SkippedCount int           `json:"skipped_count"`
 		Denied       int           `json:"denied"`
 	}
-	if err := json.Unmarshal(raw, &reply); err != nil {
+	if err := jsonx.Unmarshal(raw, &reply); err != nil {
 		return walkResult{}, err
 	}
 	if !reply.Stream {
@@ -565,7 +566,7 @@ func (e fileEnd) walk(ctx context.Context, path string) (walkResult, error) {
 			Code         string        `json:"code"`
 			Error        string        `json:"error"`
 		}
-		if err := json.Unmarshal(line, &rec); err != nil {
+		if err := jsonx.Unmarshal(line, &rec); err != nil {
 			return walkResult{}, errfmt.Errorf("the walk of %s did not decode: %w", path, err)
 		}
 		if rec.End {
@@ -695,7 +696,7 @@ func (e fileEnd) callTimeout(ctx context.Context, verb string, params any, out a
 		return err
 	}
 	if out != nil {
-		return json.Unmarshal(raw, out)
+		return jsonx.Unmarshal(raw, out)
 	}
 	return nil
 }
@@ -762,7 +763,7 @@ func (d *Daemon) dialHostFiles(ctx context.Context, host string, bulk bool) (*ho
 func (c *hostFiles) call(ctx context.Context, verb string, params any, timeout time.Duration) (json.RawMessage, error) {
 	c.id++
 	req := map[string]any{"id": c.id, "verb": verb, "params": params}
-	line, err := json.Marshal(req)
+	line, err := jsonx.Marshal(req)
 	if err != nil {
 		return nil, err
 	}
@@ -802,7 +803,7 @@ func (c *hostFiles) call(ctx context.Context, verb string, params any, timeout t
 			Hint    *VerbHint `json:"hint"`
 		} `json:"error"`
 	}
-	if err := json.Unmarshal(r.line, &resp); err != nil {
+	if err := jsonx.Unmarshal(r.line, &resp); err != nil {
 		return nil, errfmt.Errorf("the answer to %s did not decode: %w", verb, err)
 	}
 	if resp.Error != nil {

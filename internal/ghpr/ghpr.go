@@ -13,7 +13,6 @@ package ghpr
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -23,6 +22,7 @@ import (
 
 	"github.com/Gaurav-Gosain/tuios/internal/childproc"
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 )
 
 // PR states, lower case.
@@ -203,7 +203,7 @@ func Parse(data []byte) (PR, error) {
 			State      string `json:"state"`
 		} `json:"statusCheckRollup"`
 	}
-	if err := json.Unmarshal(data, &raw); err != nil {
+	if err := jsonx.Unmarshal(data, &raw); err != nil {
 		return PR{}, errfmt.Errorf("gh printed no pull request: %w", err)
 	}
 	if raw.Number <= 0 {

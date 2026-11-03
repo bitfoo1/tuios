@@ -34,7 +34,6 @@ package guibridge
 import (
 	"bufio"
 	"encoding/binary"
-	"encoding/json"
 	"errors"
 	"io"
 	"log"
@@ -51,6 +50,7 @@ import (
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 	"github.com/Gaurav-Gosain/tuios/internal/gitstate"
 	"github.com/Gaurav-Gosain/tuios/internal/input"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 	"github.com/Gaurav-Gosain/tuios/internal/session"
 	"github.com/Gaurav-Gosain/tuios/internal/terminal"
 	"github.com/Gaurav-Gosain/tuios/internal/theme"
@@ -1018,7 +1018,7 @@ func (m *model) export() {
 			st.Occupied = append(st.Occupied, ws)
 		}
 	}
-	b, err := json.Marshal(Event{Type: "state", State: st})
+	b, err := jsonx.Marshal(Event{Type: "state", State: st})
 	if err != nil || string(b) == string(m.last) {
 		return
 	}
@@ -1158,7 +1158,7 @@ func readCommands(r io.Reader, client *atomic.Pointer[session.TUIClient], p *tea
 		switch hdr[4] {
 		case KindJSON:
 			var c Command
-			if err := json.Unmarshal(body, &c); err != nil {
+			if err := jsonx.Unmarshal(body, &c); err != nil {
 				log.Printf("gui-bridge: bad command: %v", err)
 				continue
 			}
@@ -1327,7 +1327,7 @@ func (f *frameWriter) endResync() {
 }
 
 func (f *frameWriter) JSON(v any) {
-	b, err := json.Marshal(v)
+	b, err := jsonx.Marshal(v)
 	if err == nil {
 		f.Frame(KindJSON, b)
 	}

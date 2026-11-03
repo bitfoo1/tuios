@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 )
 
 // The client half of open-host-connection: what a client does to a fresh
@@ -59,7 +60,7 @@ func openHostConnectionAgent(conn net.Conn, br *bufio.Reader, host, agent string
 	if agent != "" {
 		params["ssh_auth_sock"] = agent
 	}
-	req, err := json.Marshal(verbRequest{
+	req, err := jsonx.Marshal(verbRequest{
 		ID:     json.RawMessage(`1`),
 		Verb:   "open-host-connection",
 		Params: mustJSON(params),
@@ -94,7 +95,7 @@ func openHostConnectionAgent(conn net.Conn, br *bufio.Reader, host, agent string
 		Result *HostConnectionInfo `json:"result"`
 		Error  *verbError          `json:"error"`
 	}
-	if err := json.Unmarshal(line, &resp); err != nil {
+	if err := jsonx.Unmarshal(line, &resp); err != nil {
 		return HostConnectionInfo{}, errfmt.Errorf("the daemon on this machine sent a reply this build cannot read: %w", err)
 	}
 	if resp.Error != nil {

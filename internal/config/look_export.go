@@ -12,6 +12,7 @@ import (
 	"github.com/pelletier/go-toml/v2"
 
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 	"github.com/Gaurav-Gosain/tuios/internal/theme"
 )
 
@@ -345,7 +346,7 @@ func lookDefaultValue(spec lookFileKey) (any, error) {
 	case LookList:
 		var items []string
 		if spec.Default != "" {
-			if err := json.Unmarshal([]byte(spec.Default), &items); err != nil {
+			if err := jsonx.Unmarshal([]byte(spec.Default), &items); err != nil {
 				return nil, err
 			}
 		}

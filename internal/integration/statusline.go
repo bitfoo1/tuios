@@ -1,7 +1,6 @@
 package integration
 
 import (
-	"encoding/json"
 	"errors"
 	"math"
 	"os"
@@ -10,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 )
 
 // Status line feed: the model, context use and cost a harness shows the
@@ -94,7 +94,7 @@ func ParseStatusLine(harness string, payload []byte) (StatusLineValues, error) {
 		return StatusLineValues{}, errors.New("payload is not a JSON object")
 	}
 	payloadMap := map[string]any{}
-	if err := json.Unmarshal([]byte(trimmed), &payloadMap); err != nil {
+	if err := jsonx.Unmarshal([]byte(trimmed), &payloadMap); err != nil {
 		return StatusLineValues{}, errfmt.Errorf("payload is not a JSON object: %w", err)
 	}
 	p := fields(payloadMap)
@@ -325,10 +325,10 @@ func readStatusLineSlot(root *orderedObject) statusLineSlot {
 	s := statusLineSlot{present: true, obj: obj}
 	var typ, cmd string
 	if v, ok := obj.get("type"); ok {
-		_ = json.Unmarshal(v, &typ)
+		_ = jsonx.Unmarshal(v, &typ)
 	}
 	if v, ok := obj.get("command"); ok {
-		_ = json.Unmarshal(v, &cmd)
+		_ = jsonx.Unmarshal(v, &cmd)
 	}
 	s.command = cmd
 	s.isCmd = (typ == "" || typ == "command") && cmd != ""

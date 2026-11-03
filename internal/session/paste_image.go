@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 	"github.com/Gaurav-Gosain/tuios/internal/sortx"
 )
 
@@ -637,7 +638,7 @@ func (p *remotePane) pasteImage(ctx context.Context, data []byte) (string, error
 		_ = stream.Close()
 	}()
 
-	params, err := json.Marshal(map[string]string{
+	params, err := jsonx.Marshal(map[string]string{
 		"pane":    p.id,
 		"token":   p.callsToken,
 		"content": base64.StdEncoding.EncodeToString(data),
@@ -645,7 +646,7 @@ func (p *remotePane) pasteImage(ctx context.Context, data []byte) (string, error
 	if err != nil {
 		return "", err
 	}
-	req, err := json.Marshal(verbRequest{ID: json.RawMessage(`1`), Verb: "paste-pane-image", Params: params})
+	req, err := jsonx.Marshal(verbRequest{ID: json.RawMessage(`1`), Verb: "paste-pane-image", Params: params})
 	if err != nil {
 		return "", err
 	}
@@ -668,7 +669,7 @@ func (p *remotePane) pasteImage(ctx context.Context, data []byte) (string, error
 		} `json:"result"`
 		Error *verbError `json:"error"`
 	}
-	if err := json.Unmarshal(line, &resp); err != nil {
+	if err := jsonx.Unmarshal(line, &resp); err != nil {
 		return "", errfmt.Errorf("the reply cannot be read by this build: %w", err)
 	}
 	if resp.Error != nil {

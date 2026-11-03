@@ -14,7 +14,6 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/binary"
-	"encoding/json"
 	"encoding/pem"
 	"errors"
 	"io"
@@ -28,6 +27,7 @@ import (
 	"time"
 
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 )
 
 // Web Push: an encrypted message to a push service the phone's operating
@@ -374,7 +374,7 @@ const vapidTTL = 12 * time.Hour
 func (k *VAPIDKey) Token(audience, subject string, now time.Time) (string, error) {
 	enc := base64.RawURLEncoding
 	header := enc.EncodeToString([]byte(`{"typ":"JWT","alg":"ES256"}`))
-	claims, err := json.Marshal(struct {
+	claims, err := jsonx.Marshal(struct {
 		Aud string `json:"aud"`
 		Exp int64  `json:"exp"`
 		Sub string `json:"sub"`

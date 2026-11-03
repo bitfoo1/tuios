@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 	"github.com/Gaurav-Gosain/tuios/internal/layout"
 	"github.com/Gaurav-Gosain/tuios/internal/terminal"
 	"github.com/adrg/xdg"
@@ -174,7 +175,7 @@ func LoadLayoutTemplates() ([]LayoutTemplate, error) {
 			continue
 		}
 		var tmpl LayoutTemplate
-		if err := json.Unmarshal(data, &tmpl); err != nil {
+		if err := jsonx.Unmarshal(data, &tmpl); err != nil {
 			continue
 		}
 		templates = append(templates, tmpl)

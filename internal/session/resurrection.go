@@ -15,6 +15,7 @@ import (
 
 	"github.com/Gaurav-Gosain/tuios/internal/atomicfile"
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 	"github.com/adrg/xdg"
 )
 
@@ -302,7 +303,7 @@ func LoadResurrectionState(sessionName string) (*SessionState, error) {
 	}
 
 	var state SessionState
-	if err := json.Unmarshal(data, &state); err != nil {
+	if err := jsonx.Unmarshal(data, &state); err != nil {
 		dest := archiveResurrectionFile(path)
 		return nil, errfmt.Errorf("saved state for session %q is corrupt and cannot be restored (%s): %w",
 			sessionName, archivedNote(dest), err)

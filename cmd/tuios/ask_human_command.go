@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 	"github.com/spf13/cobra"
 )
 
@@ -75,7 +76,7 @@ func runAskHuman(o askHumanOptions) error {
 // anything else on errs with a status that says what happened.
 func printAskHuman(out, errs io.Writer, raw json.RawMessage) error {
 	var res askHumanResult
-	if err := json.Unmarshal(raw, &res); err != nil {
+	if err := jsonx.Unmarshal(raw, &res); err != nil {
 		return errfmt.Errorf("failed to parse response: %w", err)
 	}
 	switch res.Status {

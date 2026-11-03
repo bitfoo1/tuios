@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -10,6 +9,7 @@ import (
 	"text/tabwriter"
 
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 	"github.com/spf13/cobra"
 )
 
@@ -149,7 +149,7 @@ func runQueuePrompt(sessionName, window, text string, jsonOutput bool) error {
 		Queued     int    `json:"queued"`
 		Delivering bool   `json:"delivering"`
 	}
-	if err := json.Unmarshal(raw, &res); err != nil {
+	if err := jsonx.Unmarshal(raw, &res); err != nil {
 		return errfmt.Errorf("failed to parse response: %w", err)
 	}
 	fmt.Println(describeQueued(res.ID, window, res.Position, res.Delivering) + t.on())
@@ -205,7 +205,7 @@ func runQueueList(w io.Writer, sessionName, window string, jsonOutput bool) erro
 		Session string     `json:"session"`
 		Entries []queueRow `json:"entries"`
 	}
-	if err := json.Unmarshal(raw, &res); err != nil {
+	if err := jsonx.Unmarshal(raw, &res); err != nil {
 		return errfmt.Errorf("failed to parse response: %w", err)
 	}
 	return printQueueRows(w, res.Session+t.on(), res.Entries)
@@ -260,7 +260,7 @@ func runQueueRemove(sessionName, window, id string, all, jsonOutput bool) error 
 		Cancelled []string `json:"cancelled"`
 		Queued    int      `json:"queued"`
 	}
-	if err := json.Unmarshal(raw, &res); err != nil {
+	if err := jsonx.Unmarshal(raw, &res); err != nil {
 		return errfmt.Errorf("failed to parse response: %w", err)
 	}
 	switch len(res.Cancelled) {

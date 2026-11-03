@@ -5,7 +5,6 @@ package federation
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/netip"
 	"os/exec"
@@ -16,6 +15,7 @@ import (
 
 	"github.com/Gaurav-Gosain/tuios/internal/childproc"
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 )
 
 // The half of tailnet discovery that talks to tailscaled. It is left out of
@@ -114,7 +114,7 @@ func readTailnetStatus(ctx context.Context, socket string) (*tailnetStatus, erro
 		cmd.Stdout, cmd.Stderr = &stdout, &stderr
 		runErr := cmd.Run()
 		var st tailnetStatus
-		if jsonErr := json.Unmarshal(stdout.Bytes(), &st); jsonErr == nil {
+		if jsonErr := jsonx.Unmarshal(stdout.Bytes(), &st); jsonErr == nil {
 			return &st, nil
 		}
 		if ctx.Err() != nil {

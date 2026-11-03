@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 )
 
 // orderedObject is a JSON object that keeps its keys in the order it read
@@ -146,7 +147,7 @@ type managedEntry struct {
 // understand.
 func hookGroups(event string, raw json.RawMessage) ([]json.RawMessage, error) {
 	var groups []json.RawMessage
-	if err := json.Unmarshal(raw, &groups); err != nil {
+	if err := jsonx.Unmarshal(raw, &groups); err != nil {
 		return nil, errfmt.Errorf("hooks.%s is not an array", event)
 	}
 	return groups, nil
@@ -160,7 +161,7 @@ func groupCommands(group json.RawMessage) []string {
 			Command string `json:"command"`
 		} `json:"hooks"`
 	}
-	if json.Unmarshal(group, &g) != nil {
+	if jsonx.Unmarshal(group, &g) != nil {
 		return nil
 	}
 	var out []string
@@ -217,7 +218,7 @@ func stripManaged(group json.RawMessage) (json.RawMessage, bool, error) {
 		return group, false, nil
 	}
 	var items []json.RawMessage
-	if json.Unmarshal(rawHooks, &items) != nil {
+	if jsonx.Unmarshal(rawHooks, &items) != nil {
 		return group, false, nil
 	}
 	kept := items[:0:0]
@@ -226,7 +227,7 @@ func stripManaged(group json.RawMessage) (json.RawMessage, bool, error) {
 		var h struct {
 			Command string `json:"command"`
 		}
-		if json.Unmarshal(item, &h) == nil && isManagedCommand(h.Command) {
+		if jsonx.Unmarshal(item, &h) == nil && isManagedCommand(h.Command) {
 			removed = true
 			continue
 		}

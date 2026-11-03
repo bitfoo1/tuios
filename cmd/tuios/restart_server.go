@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"cmp"
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -17,6 +16,7 @@ import (
 
 	"github.com/Gaurav-Gosain/tuios/internal/config"
 	"github.com/Gaurav-Gosain/tuios/internal/harness"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 	"github.com/Gaurav-Gosain/tuios/internal/plural"
 	"github.com/Gaurav-Gosain/tuios/internal/release"
 	"github.com/Gaurav-Gosain/tuios/internal/restartplan"
@@ -350,7 +350,7 @@ func readRestartedDaemon() (string, []string, error) {
 		var hs struct {
 			DaemonVersion string `json:"daemon_version"`
 		}
-		if json.Unmarshal(raw, &hs) == nil {
+		if jsonx.Unmarshal(raw, &hs) == nil {
 			after = hs.DaemonVersion
 		}
 	}
@@ -363,7 +363,7 @@ func readRestartedDaemon() (string, []string, error) {
 			Name string `json:"name"`
 		} `json:"sessions"`
 	}
-	if err := json.Unmarshal(raw, &list); err != nil {
+	if err := jsonx.Unmarshal(raw, &list); err != nil {
 		return after, nil, err
 	}
 	names := make([]string, 0, len(list.Sessions))
@@ -394,7 +394,7 @@ func confirmRestart(opts restartOptions) error {
 
 // writeRestartJSON writes one report as one line.
 func writeRestartJSON(w io.Writer, rep *restartReport) {
-	data, err := json.Marshal(rep)
+	data, err := jsonx.Marshal(rep)
 	if err != nil {
 		return
 	}

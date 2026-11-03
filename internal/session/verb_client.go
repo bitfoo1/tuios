@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 )
 
 // VerbClient is a minimal client for the line-delimited JSON verb protocol. It
@@ -257,7 +258,7 @@ func (c *VerbClient) CallWithTimeout(verb string, params any, timeout time.Durat
 
 	var rawParams json.RawMessage
 	if params != nil {
-		p, err := json.Marshal(params)
+		p, err := jsonx.Marshal(params)
 		if err != nil {
 			return nil, errfmt.Errorf("failed to encode params: %w", err)
 		}
@@ -269,7 +270,7 @@ func (c *VerbClient) CallWithTimeout(verb string, params any, timeout time.Durat
 		Verb:   verb,
 		Params: rawParams,
 	}
-	line, err := json.Marshal(req)
+	line, err := jsonx.Marshal(req)
 	if err != nil {
 		return nil, errfmt.Errorf("failed to encode request: %w", err)
 	}
@@ -289,7 +290,7 @@ func (c *VerbClient) CallWithTimeout(verb string, params any, timeout time.Durat
 	}
 
 	var resp verbResponse
-	if err := json.Unmarshal(respLine, &resp); err != nil {
+	if err := jsonx.Unmarshal(respLine, &resp); err != nil {
 		c.broken = err
 		return nil, errfmt.Errorf("failed to decode response: %w", err)
 	}
@@ -308,7 +309,7 @@ func (c *VerbClient) CallWithTimeout(verb string, params any, timeout time.Durat
 		}
 	}
 
-	rawResult, err := json.Marshal(resp.Result)
+	rawResult, err := jsonx.Marshal(resp.Result)
 	if err != nil {
 		return nil, errfmt.Errorf("failed to re-encode result: %w", err)
 	}

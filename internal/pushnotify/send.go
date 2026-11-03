@@ -6,7 +6,6 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/base64"
-	"encoding/json"
 	"errors"
 	"io"
 	"net"
@@ -19,6 +18,7 @@ import (
 
 	"github.com/Gaurav-Gosain/tuios/internal/config"
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 )
 
 // Every request goes through one dedicated http.Client, never
@@ -331,7 +331,7 @@ func sendWebhook(ctx context.Context, c *Client, p config.WebhookConfig, m Messa
 	if err != nil {
 		return err
 	}
-	data, err := json.Marshal(WebhookBody{
+	data, err := jsonx.Marshal(WebhookBody{
 		Event: "tuios.inbox", Test: m.Test, Kind: m.Item.Kind,
 		Title: m.Title, Body: m.Body, Link: m.Link, Urgent: m.Urgent,
 		ItemID: m.Item.ID, Session: m.Item.Session, Window: m.Item.Window, Harness: m.Item.Harness,

@@ -1,11 +1,11 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 	"github.com/spf13/cobra"
 )
 
@@ -130,7 +130,7 @@ func runSetNote(sessionName, window, note string, jsonOutput bool) error {
 		Window  string `json:"window"`
 		Note    string `json:"note"`
 	}
-	if err := json.Unmarshal(raw, &res); err != nil {
+	if err := jsonx.Unmarshal(raw, &res); err != nil {
 		return errfmt.Errorf("failed to parse response: %w", err)
 	}
 	what := "session " + res.Session
@@ -162,7 +162,7 @@ func runGetNote(sessionName, window string, jsonOutput bool) error {
 	var res struct {
 		Note string `json:"note"`
 	}
-	if err := json.Unmarshal(raw, &res); err != nil {
+	if err := jsonx.Unmarshal(raw, &res); err != nil {
 		return errfmt.Errorf("failed to parse response: %w", err)
 	}
 	if res.Note != "" {

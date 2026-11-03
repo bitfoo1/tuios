@@ -1,7 +1,6 @@
 package theme
 
 import (
-	"encoding/json"
 	"image/color"
 	"os"
 	"path/filepath"
@@ -10,6 +9,7 @@ import (
 	"sync"
 
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 	tint "github.com/lrstanley/bubbletint/v2"
 )
 
@@ -40,7 +40,7 @@ type themeFile struct {
 // when the file names none.
 func readThemeFile(path string, data []byte) (*themeFile, error) {
 	f := &themeFile{path: path}
-	if err := json.Unmarshal(data, f); err != nil {
+	if err := jsonx.Unmarshal(data, f); err != nil {
 		return nil, errfmt.Errorf("failed to parse theme JSON: %w", err)
 	}
 	f.Base = strings.TrimSpace(f.Base)

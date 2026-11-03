@@ -12,6 +12,7 @@ import (
 
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 	"github.com/Gaurav-Gosain/tuios/internal/integration"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 	"github.com/Gaurav-Gosain/tuios/internal/session"
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
@@ -281,7 +282,7 @@ func runAgentHook(o agentHookOptions, args []string, hio agentHookIO) {
 		out.Hold = holdForAnswer(out, hio)
 	}
 	if o.explain {
-		line, _ := json.Marshal(out)
+		line, _ := jsonx.Marshal(out)
 		fmt.Fprintln(hio.stderr, string(line))
 	}
 }
@@ -318,7 +319,7 @@ func commitMailNotice(out agentHookOutcome, hio agentHookIO) bool {
 		var res struct {
 			Committed bool `json:"committed"`
 		}
-		done <- err == nil && json.Unmarshal(raw, &res) == nil && res.Committed
+		done <- err == nil && jsonx.Unmarshal(raw, &res) == nil && res.Committed
 	}()
 	select {
 	case ok := <-done:
@@ -392,7 +393,7 @@ func fetchMailNotice(out *agentHookOutcome, client verbCaller) {
 		Lease  uint64 `json:"lease"`
 		Reason string `json:"reason"`
 	}
-	if err := json.Unmarshal(raw, &res); err != nil {
+	if err := jsonx.Unmarshal(raw, &res); err != nil {
 		out.MailError = err.Error()
 		return
 	}
@@ -545,7 +546,7 @@ func requestAnswer(out agentHookOutcome, hio agentHookIO, limit time.Duration) (
 		Message   string `json:"message"`
 		Reason    string `json:"reason"`
 	}
-	if err := json.Unmarshal(raw, &res); err != nil {
+	if err := jsonx.Unmarshal(raw, &res); err != nil {
 		trace.Error = "reading the answer: " + err.Error()
 		return "", "", trace
 	}
@@ -710,7 +711,7 @@ func reportHookActivity(client verbCaller, sess, window, harness string, harness
 		return hookActivityResult{}, err
 	}
 	var res hookActivityResult
-	if err := json.Unmarshal(raw, &res); err != nil {
+	if err := jsonx.Unmarshal(raw, &res); err != nil {
 		return hookActivityResult{}, err
 	}
 	return res, nil
@@ -765,7 +766,7 @@ func resolveHookPane(o agentHookOptions, hio agentHookIO, client verbCaller, sid
 		WindowID string `json:"window_id"`
 		By       string `json:"by"`
 	}
-	if err := json.Unmarshal(raw, &res); err != nil {
+	if err := jsonx.Unmarshal(raw, &res); err != nil {
 		return "", "", "", err
 	}
 	return res.Session, res.WindowID, res.By, nil
@@ -816,7 +817,7 @@ func verbParams(client verbCaller, verb string) (map[string]bool, error) {
 			} `json:"params"`
 		} `json:"verbs"`
 	}
-	if err := json.Unmarshal(raw, &res); err != nil {
+	if err := jsonx.Unmarshal(raw, &res); err != nil {
 		return nil, err
 	}
 	known := map[string]bool{}
@@ -923,7 +924,7 @@ func reportHook(client verbCaller, sess, window, harness string, harnessPID int,
 		return hookReportResult{}, dropped, err
 	}
 	var res hookReportResult
-	if err := json.Unmarshal(raw, &res); err != nil {
+	if err := jsonx.Unmarshal(raw, &res); err != nil {
 		return hookReportResult{}, dropped, err
 	}
 	return res, dropped, nil
@@ -946,7 +947,7 @@ func reportHookSession(client verbCaller, sess, window, harness string, harnessP
 			} `json:"params"`
 		} `json:"verbs"`
 	}
-	if err := json.Unmarshal(raw, &verbs); err != nil {
+	if err := jsonx.Unmarshal(raw, &verbs); err != nil {
 		return hookReportResult{}, nil, err
 	}
 	known := false
@@ -994,7 +995,7 @@ func reportHookSession(client verbCaller, sess, window, harness string, harnessP
 		return hookReportResult{}, dropped, err
 	}
 	var res hookReportResult
-	if err := json.Unmarshal(raw, &res); err != nil {
+	if err := jsonx.Unmarshal(raw, &res); err != nil {
 		return hookReportResult{}, dropped, err
 	}
 	return res, dropped, nil

@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -14,6 +13,7 @@ import (
 	"github.com/Gaurav-Gosain/tuios/internal/config"
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 	"github.com/Gaurav-Gosain/tuios/internal/federation"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 	"github.com/Gaurav-Gosain/tuios/internal/session"
 	"github.com/spf13/cobra"
 )
@@ -115,7 +115,7 @@ func runNewOnHostDetached(host, name string) error {
 	var res struct {
 		Session string `json:"session"`
 	}
-	if err := json.Unmarshal(raw, &res); err != nil || res.Session == "" {
+	if err := jsonx.Unmarshal(raw, &res); err != nil || res.Session == "" {
 		return errfmt.Errorf("tuios on %s created the session and sent a reply this build cannot read", host)
 	}
 	fmt.Printf("Created detached session '%s' on %s. Attach with 'tuios attach --host %s %s'.\n", res.Session, host, host, res.Session)

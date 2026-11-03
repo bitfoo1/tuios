@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -14,6 +13,7 @@ import (
 
 	"github.com/Gaurav-Gosain/tuios/internal/app"
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 	"github.com/Gaurav-Gosain/tuios/internal/layout"
 	"github.com/Gaurav-Gosain/tuios/internal/lazyre"
 	"github.com/Gaurav-Gosain/tuios/internal/session"
@@ -496,7 +496,7 @@ func runXpanes(o xpanesOptions, items []string) error {
 		var w struct {
 			WindowID string `json:"window_id"`
 		}
-		if err := json.Unmarshal(raw, &w); err != nil || w.WindowID == "" {
+		if err := jsonx.Unmarshal(raw, &w); err != nil || w.WindowID == "" {
 			return errfmt.Errorf("the daemon did not return the id of the new window")
 		}
 		res.Windows = append(res.Windows, w.WindowID)
@@ -554,7 +554,7 @@ func xpanesWorkspace(t *verbTarget, asked int) (int, string, int, error) {
 		} `json:"workspaces"`
 		CurrentWorkspace int `json:"current_workspace"`
 	}
-	if err := json.Unmarshal(raw, &list); err != nil {
+	if err := jsonx.Unmarshal(raw, &list); err != nil {
 		return 0, "", 0, errfmt.Errorf("could not read the workspaces: %w", err)
 	}
 	current := list.CurrentWorkspace
@@ -563,7 +563,7 @@ func xpanesWorkspace(t *verbTarget, asked int) (int, string, int, error) {
 		var s struct {
 			Name string `json:"session_name"`
 		}
-		if json.Unmarshal(info, &s) == nil && s.Name != "" {
+		if jsonx.Unmarshal(info, &s) == nil && s.Name != "" {
 			name = s.Name
 		}
 	}
@@ -650,7 +650,7 @@ func xpanesPaneWorkspace(t *verbTarget, paneID string) (int, bool) {
 			Scratch   bool   `json:"scratch"`
 		} `json:"windows"`
 	}
-	if json.Unmarshal(raw, &list) != nil {
+	if jsonx.Unmarshal(raw, &list) != nil {
 		return 0, false
 	}
 	for _, w := range list.Windows {

@@ -18,6 +18,7 @@ import (
 
 	"github.com/Gaurav-Gosain/tuios/internal/dirwatch"
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 )
 
 // Watching a listed folder for a client that cannot watch it itself.
@@ -229,7 +230,7 @@ func (d *Daemon) watchRemoteDir(host, dir string, done <-chan struct{}, notify f
 			Changed bool   `json:"changed"`
 			Names   string `json:"names"`
 		}
-		if err := json.Unmarshal(raw, &res); err != nil {
+		if err := jsonx.Unmarshal(raw, &res); err != nil {
 			return errfmt.Errorf("an answer this build cannot read: %w", err)
 		}
 		after = res.Names

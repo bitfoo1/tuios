@@ -1,12 +1,12 @@
 package guibridge
 
 import (
-	"encoding/json"
 	"errors"
 	"strings"
 
 	"github.com/Gaurav-Gosain/tuios/internal/config"
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 	"github.com/Gaurav-Gosain/tuios/internal/session"
 )
 
@@ -70,7 +70,7 @@ func (m *model) sessionExists(name string) bool {
 			Name string `json:"name"`
 		} `json:"sessions"`
 	}
-	if json.Unmarshal(raw, &out) != nil {
+	if jsonx.Unmarshal(raw, &out) != nil {
 		return false
 	}
 	for _, s := range out.Sessions {

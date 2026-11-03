@@ -27,6 +27,7 @@ import (
 	"sync"
 
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 	"github.com/Gaurav-Gosain/tuios/internal/tarpack"
 )
 
@@ -130,14 +131,14 @@ type Key struct {
 // UnmarshalJSON reads "ctrl+b" or {"text": "ls"}.
 func (k *Key) UnmarshalJSON(b []byte) error {
 	var s string
-	if err := json.Unmarshal(b, &s); err == nil {
+	if err := jsonx.Unmarshal(b, &s); err == nil {
 		k.Chord = s
 		return nil
 	}
 	var t struct {
 		Text string `json:"text"`
 	}
-	if err := json.Unmarshal(b, &t); err != nil || t.Text == "" {
+	if err := jsonx.Unmarshal(b, &t); err != nil || t.Text == "" {
 		return errfmt.Errorf(`a key is a chord string or {"text": ...}`)
 	}
 	k.Text = t.Text
@@ -147,9 +148,9 @@ func (k *Key) UnmarshalJSON(b []byte) error {
 // MarshalJSON writes the form UnmarshalJSON reads.
 func (k Key) MarshalJSON() ([]byte, error) {
 	if k.Text != "" {
-		return json.Marshal(map[string]string{"text": k.Text})
+		return jsonx.Marshal(map[string]string{"text": k.Text})
 	}
-	return json.Marshal(k.Chord)
+	return jsonx.Marshal(k.Chord)
 }
 
 // Explainer is a step about something the tour cannot run. It is done when
@@ -263,7 +264,7 @@ func build() (*File, []byte, error) {
 		return nil, nil, errors.New("lessons.tar.gz: no tracks.json")
 	}
 	var idx index
-	if err := json.Unmarshal(raw, &idx); err != nil {
+	if err := jsonx.Unmarshal(raw, &idx); err != nil {
 		return nil, nil, errfmt.Errorf("tracks.json: %w", err)
 	}
 	if idx.Version != Version {
@@ -284,7 +285,7 @@ func build() (*File, []byte, error) {
 // checking each. It is Load's work on files from anywhere, for the lint.
 func Assemble(indexJSON []byte, trackJSON []json.RawMessage) (*File, []byte, error) {
 	var idx index
-	if err := json.Unmarshal(indexJSON, &idx); err != nil {
+	if err := jsonx.Unmarshal(indexJSON, &idx); err != nil {
 		return nil, nil, errfmt.Errorf("tracks.json: %w", err)
 	}
 	f := &File{Version: idx.Version, Groups: idx.Groups, Coach: idx.Coach}
@@ -295,7 +296,7 @@ func Assemble(indexJSON []byte, trackJSON []json.RawMessage) (*File, []byte, err
 		name string
 		v    any
 	}{{"groups", idx.Groups}, {"coach", idx.Coach}} {
-		b, err := json.Marshal(part.v)
+		b, err := jsonx.Marshal(part.v)
 		if err != nil {
 			return nil, nil, err
 		}

@@ -9,6 +9,7 @@ import (
 
 	"github.com/Gaurav-Gosain/tuios/internal/atomicfile"
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 )
 
 // A look (see config.ParseLook) may carry a theme and a glyph set. A stranger
@@ -86,7 +87,7 @@ func CheckLookGlyphs(id string, data []byte) ([]byte, []string, error) {
 		return nil, nil, errfmt.Errorf("glyph set name %q cannot be a file name. Use a-z, 0-9, '-', '_' and '.'", id)
 	}
 	var set GlyphSet
-	if err := json.Unmarshal(data, &set); err != nil {
+	if err := jsonx.Unmarshal(data, &set); err != nil {
 		return nil, nil, errfmt.Errorf("failed to parse glyph set: %w", err)
 	}
 	set.ID = id
@@ -210,7 +211,7 @@ func ExportGlyphSet(id string) (data []byte, ok bool, err error) {
 	}
 	set := ResolveGlyphSet(id)
 	set.Inherits = ""
-	data, err = json.Marshal(set)
+	data, err = jsonx.Marshal(set)
 	return data, true, err
 }
 

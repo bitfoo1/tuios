@@ -12,6 +12,7 @@ import (
 	"charm.land/lipgloss/v2"
 	"charm.land/lipgloss/v2/table"
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 	"github.com/Gaurav-Gosain/tuios/internal/pathroot"
 	"github.com/Gaurav-Gosain/tuios/internal/plural"
 	"github.com/spf13/cobra"
@@ -215,7 +216,7 @@ func stashAttachments(t *verbTarget, paths []string, notes io.Writer) ([]string,
 	var listing struct {
 		Dir string `json:"dir"`
 	}
-	if err := json.Unmarshal(raw, &listing); err != nil {
+	if err := jsonx.Unmarshal(raw, &listing); err != nil {
 		return nil, errfmt.Errorf("failed to parse the stash listing from %s: %w", t.host, err)
 	}
 	return stashAttachmentsWith(paths, listing.Dir, t.host, notes, func(params map[string]any) (json.RawMessage, error) {
@@ -249,7 +250,7 @@ func stashAttachmentsWith(paths []string, farRoot, host string, notes io.Writer,
 		var res struct {
 			Path string `json:"path"`
 		}
-		if err := json.Unmarshal(raw, &res); err != nil || res.Path == "" {
+		if err := jsonx.Unmarshal(raw, &res); err != nil || res.Path == "" {
 			return nil, errfmt.Errorf("the stash put for %s returned no stored path", path)
 		}
 		fmt.Fprintf(notes, "Sent %s to %s's stash.\n", plainLine(filepath.Base(path)), plainLine(host))
@@ -337,7 +338,7 @@ func runStashGet(sessionName, stored, out string, jsonOutput bool) error {
 		Bytes   int64  `json:"bytes"`
 		Content string `json:"content"`
 	}
-	if err := json.Unmarshal(raw, &res); err != nil {
+	if err := jsonx.Unmarshal(raw, &res); err != nil {
 		return errfmt.Errorf("failed to parse response: %w", err)
 	}
 	data, err := base64.StdEncoding.DecodeString(res.Content)
@@ -387,7 +388,7 @@ func printStashPut(out, notes io.Writer, raw json.RawMessage) error {
 		Evicted   int    `json:"evicted"`
 		Evictions uint64 `json:"evictions"`
 	}
-	if err := json.Unmarshal(raw, &res); err != nil {
+	if err := jsonx.Unmarshal(raw, &res); err != nil {
 		return errfmt.Errorf("failed to parse response: %w", err)
 	}
 	fmt.Fprintln(out, res.Path)
@@ -431,7 +432,7 @@ func printStashList(w io.Writer, raw json.RawMessage) error {
 		Evicted  uint64          `json:"evicted"`
 		MaxBytes int64           `json:"max_bytes"`
 	}
-	if err := json.Unmarshal(raw, &res); err != nil {
+	if err := jsonx.Unmarshal(raw, &res); err != nil {
 		return errfmt.Errorf("failed to parse response: %w", err)
 	}
 	if len(res.Entries) == 0 {

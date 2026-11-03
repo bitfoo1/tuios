@@ -11,6 +11,7 @@ import (
 
 	"github.com/Gaurav-Gosain/tuios/internal/config"
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 	"github.com/Gaurav-Gosain/tuios/internal/mcp"
 	"github.com/Gaurav-Gosain/tuios/internal/session"
 	"github.com/spf13/cobra"
@@ -93,12 +94,12 @@ tuios integration install <harness> --mcp registers it with a harness.`,
 
 // mcpVerbDocs is the verb table, in the shape the MCP server reads.
 func mcpVerbDocs() []mcp.VerbDoc {
-	raw, err := json.Marshal(session.VerbDocs())
+	raw, err := jsonx.Marshal(session.VerbDocs())
 	if err != nil {
 		return nil
 	}
 	var out []mcp.VerbDoc
-	_ = json.Unmarshal(raw, &out)
+	_ = jsonx.Unmarshal(raw, &out)
 	return out
 }
 

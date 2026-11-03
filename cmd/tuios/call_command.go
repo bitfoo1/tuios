@@ -13,6 +13,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 	"github.com/Gaurav-Gosain/tuios/internal/session"
 )
 
@@ -137,7 +138,7 @@ func runCall(out io.Writer, in io.Reader, verb, rawParams string, o callOptions)
 		rawParams = string(b)
 	}
 	if strings.TrimSpace(rawParams) != "" {
-		if err := json.Unmarshal([]byte(rawParams), &params); err != nil {
+		if err := jsonx.Unmarshal([]byte(rawParams), &params); err != nil {
 			return callFail(out, o, callExitInput, "invalid_input", errfmt.Errorf("params must be a JSON object: %w", err))
 		}
 	}
@@ -195,7 +196,7 @@ func writeCallJSON(out io.Writer, v any, pretty bool) {
 	if pretty {
 		b, _ = json.MarshalIndent(v, "", "  ")
 	} else {
-		b, _ = json.Marshal(v)
+		b, _ = jsonx.Marshal(v)
 	}
 	_, _ = fmt.Fprintln(out, string(b))
 }

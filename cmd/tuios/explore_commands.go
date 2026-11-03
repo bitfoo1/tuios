@@ -9,6 +9,7 @@ import (
 	"github.com/Gaurav-Gosain/tuios/internal/config"
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 	"github.com/Gaurav-Gosain/tuios/internal/explore"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 	"github.com/Gaurav-Gosain/tuios/internal/sortx"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -257,7 +258,7 @@ func loadConfigOptions(sessionName string) ([]configOption, error) {
 	var res struct {
 		Options []optionRow `json:"options"`
 	}
-	if err := json.Unmarshal(raw, &res); err != nil {
+	if err := jsonx.Unmarshal(raw, &res); err != nil {
 		return nil, errfmt.Errorf("failed to parse the option list: %w", err)
 	}
 	out := make([]configOption, 0, len(res.Options))
@@ -286,7 +287,7 @@ func readConfigValue(call func(string, any) (json.RawMessage, error), sessionNam
 		Value  string `json:"value"`
 		Source string `json:"source"`
 	}
-	_ = json.Unmarshal(raw, &v)
+	_ = jsonx.Unmarshal(raw, &v)
 	return v.Value, v.Source
 }
 

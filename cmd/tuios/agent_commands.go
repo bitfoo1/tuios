@@ -14,6 +14,7 @@ import (
 	"charm.land/lipgloss/v2/table"
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 	"github.com/Gaurav-Gosain/tuios/internal/invisible"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 	"github.com/Gaurav-Gosain/tuios/internal/plural"
 	"github.com/Gaurav-Gosain/tuios/internal/session"
 )
@@ -141,7 +142,7 @@ func printAgentList(w io.Writer, raw json.RawMessage, all bool, on string) error
 		Select      string     `json:"select"`
 		Confirm     string     `json:"confirm"`
 	}
-	if err := json.Unmarshal(raw, &res); err != nil {
+	if err := jsonx.Unmarshal(raw, &res); err != nil {
 		return errfmt.Errorf("failed to parse response: %w", err)
 	}
 	if len(res.Agents) == 0 && res.Select != "" {
@@ -301,7 +302,7 @@ func runSendAgentMessage(sessionName, to, from, subject, text string, replyTo ui
 		ThreadID       uint64 `json:"thread_id"`
 		ReplyToMissing bool   `json:"reply_to_missing"`
 	}
-	if err := json.Unmarshal(raw, &res); err != nil {
+	if err := jsonx.Unmarshal(raw, &res); err != nil {
 		return errfmt.Errorf("failed to parse response: %w", err)
 	}
 	// The thread is worth printing only when it is not the message itself, which
@@ -373,7 +374,7 @@ func queueAgentMessage(host, sess, window, from, subject, text string, replyTo u
 		MessageID uint64 `json:"message_id"`
 		Waiting   int    `json:"waiting"`
 	}
-	if err := json.Unmarshal(raw, &res); err != nil {
+	if err := jsonx.Unmarshal(raw, &res); err != nil {
 		return errfmt.Errorf("failed to parse response: %w", err)
 	}
 	if !res.Queued {
@@ -466,7 +467,7 @@ func printAgentMessages(w io.Writer, raw json.RawMessage, on string) error {
 		Inbox         string            `json:"inbox"`
 		Thread        uint64            `json:"thread"`
 	}
-	if err := json.Unmarshal(raw, &res); err != nil {
+	if err := jsonx.Unmarshal(raw, &res); err != nil {
 		return errfmt.Errorf("failed to parse response: %w", err)
 	}
 	dropped := droppedLine(res.Inbox, res.Evicted, res.EvictedUnread)
@@ -709,7 +710,7 @@ func printAskReply(w io.Writer, raw json.RawMessage, host string) error {
 		QueuedBehind int   `json:"queued_behind"`
 		WaitedTurnMS int64 `json:"waited_turn_ms"`
 	}
-	if err := json.Unmarshal(raw, &res); err != nil {
+	if err := jsonx.Unmarshal(raw, &res); err != nil {
 		return errfmt.Errorf("failed to parse response: %w", err)
 	}
 

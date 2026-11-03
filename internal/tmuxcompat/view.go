@@ -1,7 +1,6 @@
 package tmuxcompat
 
 import (
-	"encoding/json"
 	"errors"
 	"os"
 	"path/filepath"
@@ -10,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 )
 
 // pane is one tuios window seen as a tmux pane.
@@ -96,7 +96,7 @@ func (s *Shim) daemonSessions() ([]listedSession, error) {
 	var ls struct {
 		Sessions []listedSession `json:"sessions"`
 	}
-	if err := json.Unmarshal(raw, &ls); err != nil {
+	if err := jsonx.Unmarshal(raw, &ls); err != nil {
 		return nil, errfmt.Errorf("read list-sessions: %w", err)
 	}
 	return ls.Sessions, nil
@@ -174,7 +174,7 @@ func (s *Shim) sessionInfo() listedSession {
 		Height   int    `json:"height"`
 		Attached bool   `json:"tui_attached"`
 	}
-	if json.Unmarshal(raw, &si) == nil {
+	if jsonx.Unmarshal(raw, &si) == nil {
 		info.ID, info.Width, info.Height, info.Attached = si.ID, si.Width, si.Height, si.Attached
 	}
 	return info
@@ -206,7 +206,7 @@ func (s *Shim) loadSession(info listedSession, server bool) (*sessionView, error
 		Focused string `json:"focused_window_id"`
 		Current int    `json:"current_workspace"`
 	}
-	if err := json.Unmarshal(raw, &wl); err != nil {
+	if err := jsonx.Unmarshal(raw, &wl); err != nil {
 		return nil, errfmt.Errorf("read list-windows: %w", err)
 	}
 	sv := &sessionView{
@@ -274,7 +274,7 @@ func (s *Shim) loadSession(info listedSession, server bool) (*sessionView, error
 			History   []string `json:"focus_history"`
 		} `json:"workspaces"`
 	}
-	if err := json.Unmarshal(raw, &ws); err != nil {
+	if err := jsonx.Unmarshal(raw, &ws); err != nil {
 		return nil, errfmt.Errorf("read list-workspaces: %w", err)
 	}
 	for _, w := range ws.Workspaces {
@@ -798,7 +798,7 @@ func (s *Shim) serverVar(name string) (string, bool) {
 				var h struct {
 					PID int `json:"pid"`
 				}
-				if json.Unmarshal(raw, &h) == nil {
+				if jsonx.Unmarshal(raw, &h) == nil {
 					s.daemonPID = h.PID
 				}
 			}

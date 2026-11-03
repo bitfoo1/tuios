@@ -13,6 +13,7 @@ import (
 	"tuios.dev/tml"
 
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 	"github.com/Gaurav-Gosain/tuios/internal/theme"
 	"github.com/Gaurav-Gosain/tuios/internal/tmldraw"
 )
@@ -104,7 +105,7 @@ func runTMLRender(name string, o tmlRenderOptions, stdin io.Reader, stdout, stde
 	}
 	if o.state != "" {
 		var probe map[string]any
-		if err := json.Unmarshal([]byte(o.state), &probe); err != nil || probe == nil {
+		if err := jsonx.Unmarshal([]byte(o.state), &probe); err != nil || probe == nil {
 			return errfmt.Errorf("--state is not a JSON object: %s", strings.TrimSpace(o.state))
 		}
 		draw.State = json.RawMessage(o.state)

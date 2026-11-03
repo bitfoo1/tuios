@@ -12,6 +12,7 @@ import (
 	"unicode"
 
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 	"github.com/Gaurav-Gosain/tuios/internal/pastebuf"
 	"tuios.dev/vt"
 )
@@ -376,7 +377,7 @@ func (b *b64Bytes) UnmarshalJSON(data []byte) error {
 		return nil
 	}
 	var s string
-	if err := json.Unmarshal(data, &s); err != nil {
+	if err := jsonx.Unmarshal(data, &s); err != nil {
 		return err
 	}
 	out, err := base64.StdEncoding.DecodeString(s)
@@ -407,7 +408,7 @@ func (d *Daemon) verbSetBuffer(cs *connState, params json.RawMessage) (any, *ver
 		More    bool     `json:"more"`
 	}
 	if len(params) > 0 {
-		if err := json.Unmarshal(params, &p); errors.Is(err, errNotBase64) {
+		if err := jsonx.Unmarshal(params, &p); errors.Is(err, errNotBase64) {
 			return nil, invalidParam("data_b64", "set-buffer: data_b64 is not base64")
 		} else if err != nil {
 			return nil, decodeParams(params, &p)

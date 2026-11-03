@@ -16,6 +16,7 @@ import (
 
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 	"github.com/Gaurav-Gosain/tuios/internal/federation"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 	"github.com/Gaurav-Gosain/tuios/internal/session"
 )
 
@@ -469,7 +470,7 @@ func readLocalDaemon(ctx context.Context, t *syncTarget) {
 			PID           int    `json:"pid"`
 			Sessions      int    `json:"sessions"`
 		}
-		if json.Unmarshal(raw, &hs) == nil {
+		if jsonx.Unmarshal(raw, &hs) == nil {
 			t.res.Daemon.Version = hs.DaemonVersion
 			t.res.Daemon.PID = hs.PID
 			t.res.Daemon.SessionCount = hs.Sessions
@@ -494,7 +495,7 @@ func readDaemonSessions(ctx context.Context, t *syncTarget, call daemonCaller) {
 			Name string `json:"name"`
 		} `json:"sessions"`
 	}
-	if err := json.Unmarshal(raw, &list); err != nil {
+	if err := jsonx.Unmarshal(raw, &list); err != nil {
 		t.res.Daemon.Unread = true
 		return
 	}
@@ -521,7 +522,7 @@ func readDaemonSessions(ctx context.Context, t *syncTarget, call daemonCaller) {
 					Resumable   string `json:"agent_resumable"`
 				} `json:"windows"`
 			}
-			if json.Unmarshal(raw, &wl) == nil {
+			if jsonx.Unmarshal(raw, &wl) == nil {
 				ss.Panes = len(wl.Windows)
 				live := map[string]string{}
 				for _, w := range wl.Windows {

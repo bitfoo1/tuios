@@ -2,7 +2,6 @@ package config
 
 import (
 	"cmp"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io/fs"
@@ -16,6 +15,7 @@ import (
 	"time"
 
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 	"github.com/Gaurav-Gosain/tuios/internal/overlay"
 	"github.com/Gaurav-Gosain/tuios/internal/sortx"
 	"github.com/Gaurav-Gosain/tuios/internal/theme"
@@ -3330,7 +3330,7 @@ func (f FPSLimit) MarshalTOML() ([]byte, error) {
 	}
 	// A JSON string is a TOML basic string: the same quotes and escapes, and
 	// encoding/json never writes the one escape TOML lacks (\/).
-	return json.Marshal(string(f))
+	return jsonx.Marshal(string(f))
 }
 
 // IsAuto reports whether the value is "auto", in any case.

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -17,6 +16,7 @@ import (
 	"golang.org/x/term"
 
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 	"github.com/Gaurav-Gosain/tuios/internal/session"
 )
 
@@ -453,7 +453,7 @@ func (v *paneView) pumpOutput() (string, error) {
 			var e struct {
 				Code string `json:"code"`
 			}
-			if json.Unmarshal(payload, &e) == nil && e.Code == "lease_expired" {
+			if jsonx.Unmarshal(payload, &e) == nil && e.Code == "lease_expired" {
 				cols, rows := v.size()
 				_ = stream.Lease(cols, rows)
 			}

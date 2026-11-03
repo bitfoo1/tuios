@@ -13,6 +13,7 @@ import (
 	"github.com/Gaurav-Gosain/tuios/internal/config"
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 	"github.com/Gaurav-Gosain/tuios/internal/federation"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 	"github.com/Gaurav-Gosain/tuios/internal/session"
 	"github.com/spf13/cobra"
 )
@@ -190,7 +191,7 @@ func signInReports(client *session.VerbClient) ([]federation.HostReport, error) 
 	var res struct {
 		Hosts []federation.HostReport `json:"hosts"`
 	}
-	if err := json.Unmarshal(raw, &res); err != nil {
+	if err := jsonx.Unmarshal(raw, &res); err != nil {
 		return nil, errfmt.Errorf("failed to parse response: %w", err)
 	}
 	return res.Hosts, nil

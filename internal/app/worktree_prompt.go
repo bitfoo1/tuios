@@ -1,7 +1,6 @@
 package app
 
 import (
-	"encoding/json"
 	"path/filepath"
 	"strings"
 	"time"
@@ -9,6 +8,7 @@ import (
 	tea "charm.land/bubbletea/v2"
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 	"github.com/Gaurav-Gosain/tuios/internal/gitstate"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 	"github.com/Gaurav-Gosain/tuios/internal/session"
 	"github.com/Gaurav-Gosain/tuios/internal/textedit"
 )
@@ -367,7 +367,7 @@ func callWorktreeVerb(dial agentMailDial, verb, fail string, params map[string]a
 	if err != nil {
 		return errfmt.Errorf("failed to %s: %w", fail, err)
 	}
-	if err := json.Unmarshal(raw, res); err != nil {
+	if err := jsonx.Unmarshal(raw, res); err != nil {
 		return errfmt.Errorf("failed to read the daemon's reply: %w", err)
 	}
 	return nil

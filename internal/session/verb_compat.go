@@ -1,7 +1,6 @@
 package session
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -11,6 +10,7 @@ import (
 	"time"
 
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 	"github.com/Gaurav-Gosain/tuios/internal/plural"
 )
 
@@ -155,7 +155,7 @@ func (c *VerbClient) handshake(clientVersion string) (*DaemonHandshake, error) {
 	}
 	if err == nil {
 		var hs DaemonHandshake
-		if uerr := json.Unmarshal(raw, &hs); uerr != nil {
+		if uerr := jsonx.Unmarshal(raw, &hs); uerr != nil {
 			return nil, errfmt.Errorf("failed to decode daemon handshake: %w", uerr)
 		}
 		return &hs, nil

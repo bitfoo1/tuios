@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 	"github.com/Gaurav-Gosain/tuios/internal/lazyre"
 )
 
@@ -139,17 +140,17 @@ func readJSONEntry(shape mcpShape, raw json.RawMessage) (command string, args []
 		Command json.RawMessage `json:"command"`
 		Args    []string        `json:"args"`
 	}
-	if json.Unmarshal(raw, &e) != nil {
+	if jsonx.Unmarshal(raw, &e) != nil {
 		return "", nil, false
 	}
 	if shape == mcpOpenCodeJSON {
 		var argv []string
-		if json.Unmarshal(e.Command, &argv) != nil || len(argv) == 0 {
+		if jsonx.Unmarshal(e.Command, &argv) != nil || len(argv) == 0 {
 			return "", nil, false
 		}
 		return argv[0], argv[1:], true
 	}
-	if json.Unmarshal(e.Command, &command) != nil {
+	if jsonx.Unmarshal(e.Command, &command) != nil {
 		return "", nil, false
 	}
 	return command, e.Args, true

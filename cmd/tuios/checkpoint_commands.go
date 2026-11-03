@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 	"github.com/Gaurav-Gosain/tuios/internal/plural"
 	"github.com/Gaurav-Gosain/tuios/internal/review"
 	"github.com/Gaurav-Gosain/tuios/internal/worktree"
@@ -146,7 +147,7 @@ as it was before a restore.`,
 				Enabled     bool                  `json:"enabled"`
 				Checkpoints []worktree.Checkpoint `json:"checkpoints"`
 			}
-			if err := json.Unmarshal(raw, &res); err != nil {
+			if err := jsonx.Unmarshal(raw, &res); err != nil {
 				return errfmt.Errorf("failed to parse response: %w", err)
 			}
 			return printCheckpointList(os.Stdout, res.Session, res.Window, res.Worktree, on, res.Enabled, res.Checkpoints)
@@ -248,7 +249,7 @@ N out for the newest checkpoint. Nothing in the repository changes.`,
 				Files      []review.File       `json:"files"`
 				Totals     review.Totals       `json:"totals"`
 			}
-			if err := json.Unmarshal(raw, &res); err != nil {
+			if err := jsonx.Unmarshal(raw, &res); err != nil {
 				return errfmt.Errorf("failed to parse response: %w", err)
 			}
 			fmt.Printf("Checkpoint %d of %s, pane %s%s, against %s: %d %s, +%d -%d\n",
@@ -305,7 +306,7 @@ prompt. Use --force to restore then.`,
 				Written  []string            `json:"written"`
 				Removed  []string            `json:"removed"`
 			}
-			if err := json.Unmarshal(raw, &res); err != nil {
+			if err := jsonx.Unmarshal(raw, &res); err != nil {
 				return errfmt.Errorf("failed to parse response: %w", err)
 			}
 			fmt.Printf("Restored checkpoint %d in %s, pane %s%s: %d %s written, %d removed.\n",

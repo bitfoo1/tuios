@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -18,6 +17,7 @@ import (
 	"github.com/Gaurav-Gosain/tuios/internal/config"
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 	"github.com/Gaurav-Gosain/tuios/internal/federation"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 	"github.com/Gaurav-Gosain/tuios/internal/session"
 	"github.com/Gaurav-Gosain/tuios/internal/units"
 	"github.com/spf13/cobra"
@@ -474,7 +474,7 @@ func runCp(cmd *cobra.Command, args []string, o cpOptions) error {
 			continue
 		}
 		var r copyRow
-		if err := json.Unmarshal(raw, &r); err != nil {
+		if err := jsonx.Unmarshal(raw, &r); err != nil {
 			return err
 		}
 		started = append(started, r)

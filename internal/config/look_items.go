@@ -1,13 +1,13 @@
 package config
 
 import (
-	"encoding/json"
 	"reflect"
 	"slices"
 	"strconv"
 	"strings"
 
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 	"github.com/Gaurav-Gosain/tuios/internal/theme"
 )
 
@@ -313,7 +313,7 @@ func SetLookValue(cfg *UserConfig, path, text string) error {
 		v = b
 	case LookList:
 		var items []string
-		if err := json.Unmarshal([]byte(text), &items); err != nil {
+		if err := jsonx.Unmarshal([]byte(text), &items); err != nil {
 			return errfmt.Errorf("%s must be a JSON list of text, such as [\"a\",\"b\"]", path)
 		}
 		kept, _, err := lookItems(path, items)
@@ -350,7 +350,7 @@ func CheckLookItems(path, text string) error {
 	var v any = text
 	if path != "appearance.sidebar.sections" {
 		var items []string
-		if err := json.Unmarshal([]byte(text), &items); err != nil {
+		if err := jsonx.Unmarshal([]byte(text), &items); err != nil {
 			return errfmt.Errorf("%s must be a JSON list of text, such as [\"a\",\"b\"]", path)
 		}
 		v = items

@@ -3,7 +3,6 @@ package session
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"errors"
 	"os"
 	"os/exec"
@@ -12,6 +11,7 @@ import (
 	"time"
 
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 	"tuios.dev/vt"
 )
 
@@ -119,7 +119,7 @@ func preflightBinary(path string, afterCheck func()) (handoffBinary, error) {
 	}
 	took := time.Since(started)
 	var acc HandoffAccepts
-	if err := json.Unmarshal(bytes.TrimSpace(out.Bytes()), &acc); err != nil {
+	if err := jsonx.Unmarshal(bytes.TrimSpace(out.Bytes()), &acc); err != nil {
 		return handoffBinary{}, errfmt.Errorf("%s ran, but did not say which live upgrades it accepts (it printed %q), so it is not a tuios this daemon can upgrade to. Check the path names a tuios binary", abs, clip(bytes.TrimSpace(out.Bytes()), 200))
 	}
 	if acc.OS != runtime.GOOS {

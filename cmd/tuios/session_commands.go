@@ -18,6 +18,7 @@ import (
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 	"github.com/Gaurav-Gosain/tuios/internal/hooks"
 	"github.com/Gaurav-Gosain/tuios/internal/input"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 	"github.com/Gaurav-Gosain/tuios/internal/plural"
 	"github.com/Gaurav-Gosain/tuios/internal/serverscope"
 	"github.com/Gaurav-Gosain/tuios/internal/session"
@@ -185,7 +186,7 @@ func attachWindowSize(client *session.VerbClient, name string) string {
 	var res struct {
 		WindowSize string `json:"window_size"`
 	}
-	if json.Unmarshal(raw, &res) != nil {
+	if jsonx.Unmarshal(raw, &res) != nil {
 		return ""
 	}
 	return res.WindowSize
@@ -215,7 +216,7 @@ func listSessionInfos(client *session.VerbClient) ([]session.SessionInfo, error)
 	var listed struct {
 		Sessions []session.SessionInfo `json:"sessions"`
 	}
-	if err := json.Unmarshal(raw, &listed); err != nil {
+	if err := jsonx.Unmarshal(raw, &listed); err != nil {
 		return nil, err
 	}
 	return listed.Sessions, nil
@@ -377,7 +378,7 @@ func runNewSessionInSpace(sessionName, space string, detach bool) error {
 	var res struct {
 		Session string `json:"session"`
 	}
-	if err := json.Unmarshal(raw, &res); err != nil || res.Session == "" {
+	if err := jsonx.Unmarshal(raw, &res); err != nil || res.Session == "" {
 		return errfmt.Errorf("failed to parse the new session's name: %v: %s", err, raw)
 	}
 
@@ -760,7 +761,7 @@ func runListClients(jsonOutput bool) error {
 	var listed struct {
 		Clients []session.ClientInfo `json:"clients"`
 	}
-	if err := json.Unmarshal(raw, &listed); err != nil {
+	if err := jsonx.Unmarshal(raw, &listed); err != nil {
 		return errfmt.Errorf("failed to parse clients: %w", err)
 	}
 	if jsonOutput {
@@ -809,7 +810,7 @@ func runListSessions(jsonOutput bool) error {
 	var listed struct {
 		Sessions []session.SessionInfo `json:"sessions"`
 	}
-	if err := json.Unmarshal(raw, &listed); err != nil {
+	if err := jsonx.Unmarshal(raw, &listed); err != nil {
 		return errfmt.Errorf("failed to parse sessions: %w", err)
 	}
 	sessions := listed.Sessions

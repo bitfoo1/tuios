@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 	"github.com/Gaurav-Gosain/tuios/internal/session"
 	"github.com/spf13/cobra"
 	"tuios.dev/tml"
@@ -210,7 +211,7 @@ func runTMLShow(name string, o tmlShowOptions, stdin io.Reader, stdout io.Writer
 		Reason   string          `json:"reason"`
 		Value    json.RawMessage `json:"value"`
 	}
-	if err := json.Unmarshal(raw, &res); err != nil {
+	if err := jsonx.Unmarshal(raw, &res); err != nil {
 		return errfmt.Errorf("failed to parse response: %w", err)
 	}
 	if !o.wait {
@@ -308,7 +309,7 @@ func streamTMLEvents(client *session.VerbClient, raw json.RawMessage, stdout io.
 		var ev struct {
 			TML *session.TMLEvent `json:"tml"`
 		}
-		if json.Unmarshal(line, &ev) == nil && ev.TML != nil && ev.TML.Name == "close" {
+		if jsonx.Unmarshal(line, &ev) == nil && ev.TML != nil && ev.TML.Name == "close" {
 			return nil
 		}
 	}

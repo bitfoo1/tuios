@@ -15,6 +15,7 @@ import (
 	"github.com/pelletier/go-toml/v2"
 
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 	"github.com/Gaurav-Gosain/tuios/internal/theme"
 )
 
@@ -486,7 +487,7 @@ func (lk *Look) readAsset(raw map[string]any, key string, glyphs bool) (string, 
 	if !theme.ValidThemeID(own) || !theme.ValidThemeID(id) {
 		return "", errfmt.Errorf("[%s] id %q cannot be a file name. Use a-z, 0-9, '-', '_' and '.'", key, own)
 	}
-	data, err := json.Marshal(table)
+	data, err := jsonx.Marshal(table)
 	if err != nil {
 		return "", errfmt.Errorf("[%s]: %w", key, err)
 	}

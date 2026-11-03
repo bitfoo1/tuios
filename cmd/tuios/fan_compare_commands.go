@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -11,6 +10,7 @@ import (
 
 	"github.com/Gaurav-Gosain/tuios/internal/config"
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 
 	"github.com/Gaurav-Gosain/tuios/internal/plural"
 	"github.com/Gaurav-Gosain/tuios/internal/session"
@@ -101,7 +101,7 @@ func runFanCompare(target string, changes, jsonOutput bool) error {
 		return printVerbResultOn(t, raw, true)
 	}
 	var res fanCompareResult
-	if err := json.Unmarshal(raw, &res); err != nil {
+	if err := jsonx.Unmarshal(raw, &res); err != nil {
 		return errfmt.Errorf("failed to parse response: %w", err)
 	}
 	fmt.Print(renderFanCompare(res, t.on(), time.Now()))
@@ -410,7 +410,7 @@ func runFanVerify(target, command string, timeout time.Duration, wait, jsonOutpu
 			Reason  string `json:"reason"`
 		} `json:"skipped"`
 	}
-	if err := json.Unmarshal(raw, &started); err != nil {
+	if err := jsonx.Unmarshal(raw, &started); err != nil {
 		return errfmt.Errorf("failed to parse response: %w", err)
 	}
 	if !wait {
@@ -500,7 +500,7 @@ func waitFanVerify(t *verbTarget, anySession string, sessions []string) ([]fanCo
 			return nil, t.explain("compare-fan", err)
 		}
 		var res fanCompareResult
-		if err := json.Unmarshal(raw, &res); err != nil {
+		if err := jsonx.Unmarshal(raw, &res); err != nil {
 			return nil, errfmt.Errorf("failed to parse response: %w", err)
 		}
 		var rows []fanCompareRow

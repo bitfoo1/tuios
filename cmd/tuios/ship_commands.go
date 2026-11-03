@@ -12,6 +12,7 @@ import (
 
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 	"github.com/Gaurav-Gosain/tuios/internal/ghpr"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 	"github.com/Gaurav-Gosain/tuios/internal/plural"
 	"github.com/Gaurav-Gosain/tuios/internal/session"
 	"github.com/spf13/cobra"
@@ -156,7 +157,7 @@ prompt. Use --force to commit then.`,
 				Commit  string `json:"commit"`
 				Message string `json:"message"`
 			}
-			if err := json.Unmarshal(raw, &res); err != nil {
+			if err := jsonx.Unmarshal(raw, &res); err != nil {
 				return errfmt.Errorf("failed to parse response: %w", err)
 			}
 			subject, _, _ := strings.Cut(res.Message, "\n")
@@ -274,7 +275,7 @@ worktree are not merged. Commit them first with 'tuios ship commit'.`,
 				return printVerbResultOn(t, raw, true)
 			}
 			var res shipMergeResult
-			if err := json.Unmarshal(raw, &res); err != nil {
+			if err := jsonx.Unmarshal(raw, &res); err != nil {
 				return errfmt.Errorf("failed to parse response: %w", err)
 			}
 			fmt.Print(res.sentences())
@@ -406,7 +407,7 @@ Inbox. The command waits for it (--wait).`,
 				Remote string `json:"remote"`
 				URL    string `json:"url"`
 			}
-			if err := json.Unmarshal(raw, &res); err != nil {
+			if err := jsonx.Unmarshal(raw, &res); err != nil {
 				return errfmt.Errorf("failed to parse response: %w", err)
 			}
 			fmt.Printf("Pushed %s at %s to %s (%s).\n", plainLine(res.Branch), shortHash(res.Commit), plainLine(res.Remote), plainLine(res.URL))
@@ -477,7 +478,7 @@ The rail shows the pull request and its checks on the agent's row, and
 				Created bool     `json:"created"`
 				PR      *ghpr.PR `json:"pr"`
 			}
-			if err := json.Unmarshal(raw, &res); err != nil {
+			if err := jsonx.Unmarshal(raw, &res); err != nil {
 				return errfmt.Errorf("failed to parse response: %w", err)
 			}
 			fmt.Printf("Pushed %s at %s to %s.\n", plainLine(res.Branch), shortHash(res.Commit), plainLine(res.Remote))
@@ -535,7 +536,7 @@ reads an open pull request again every minute while a client is attached.`,
 				GH     bool     `json:"gh"`
 				PR     *ghpr.PR `json:"pr"`
 			}
-			if err := json.Unmarshal(raw, &res); err != nil {
+			if err := jsonx.Unmarshal(raw, &res); err != nil {
 				return errfmt.Errorf("failed to parse response: %w", err)
 			}
 			switch {

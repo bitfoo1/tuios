@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 )
 
 // Caller makes one tuios verb call. *session.VerbClient satisfies it.
@@ -509,7 +510,7 @@ func (s *Shim) newPane(sess string, ws int, focus bool, cwd string, cmd, env []s
 	var res struct {
 		ID string `json:"window_id"`
 	}
-	if err := json.Unmarshal(raw, &res); err != nil || res.ID == "" {
+	if err := jsonx.Unmarshal(raw, &res); err != nil || res.ID == "" {
 		return "", errors.New("create pane failed: new-window returned no window id")
 	}
 	return res.ID, nil
@@ -697,7 +698,7 @@ func (s *Shim) capture(p *pane, source string, styled bool) ([]string, error) {
 	var res struct {
 		Content string `json:"content"`
 	}
-	if err := json.Unmarshal(raw, &res); err != nil {
+	if err := jsonx.Unmarshal(raw, &res); err != nil {
 		return nil, errfmt.Errorf("read capture-pane: %w", err)
 	}
 	return splitLines(res.Content), nil
@@ -1225,7 +1226,7 @@ func respawnGrantsAllow(c Caller, params map[string]any, peerPID int, target str
 		Admin   bool     `json:"admin"`
 		PeerPID int      `json:"peer_pid"`
 	}
-	if err := json.Unmarshal(raw, &pg); err != nil {
+	if err := jsonx.Unmarshal(raw, &pg); err != nil {
 		return errfmt.Errorf("read pane-grants: %w", err)
 	}
 	if peerPID > 0 && pg.PeerPID != peerPID {

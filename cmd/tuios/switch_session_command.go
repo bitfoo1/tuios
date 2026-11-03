@@ -8,6 +8,7 @@ import (
 
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 	"github.com/Gaurav-Gosain/tuios/internal/federation"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 	"github.com/spf13/cobra"
 )
 
@@ -113,7 +114,7 @@ func runSwitchSession(name, host, fromSession, clientID string, create bool, cwd
 	}
 	if jsonOut {
 		var pretty any
-		if err := json.Unmarshal(raw, &pretty); err != nil {
+		if err := jsonx.Unmarshal(raw, &pretty); err != nil {
 			return errfmt.Errorf("failed to parse response: %w", err)
 		}
 		out, err := json.MarshalIndent(pretty, "", "  ")
@@ -129,7 +130,7 @@ func runSwitchSession(name, host, fromSession, clientID string, create bool, cwd
 		Created bool   `json:"created"`
 		Already bool   `json:"already"`
 	}
-	if err := json.Unmarshal(raw, &res); err != nil {
+	if err := jsonx.Unmarshal(raw, &res); err != nil {
 		return errfmt.Errorf("failed to parse response: %w", err)
 	}
 	where := res.Session

@@ -1,12 +1,12 @@
 package lessons
 
 import (
-	"encoding/json"
 	"fmt"
 	"regexp"
 	"strings"
 
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 )
 
 // Event is one event from internal/learn, in the shape a rule reads: the
@@ -101,13 +101,13 @@ type ActionRef struct {
 
 // UnmarshalJSON reads "name" or {"prefix": "..."}.
 func (a *ActionRef) UnmarshalJSON(b []byte) error {
-	if err := json.Unmarshal(b, &a.Name); err == nil {
+	if err := jsonx.Unmarshal(b, &a.Name); err == nil {
 		return nil
 	}
 	var p struct {
 		Prefix string `json:"prefix"`
 	}
-	if err := json.Unmarshal(b, &p); err != nil || p.Prefix == "" {
+	if err := jsonx.Unmarshal(b, &p); err != nil || p.Prefix == "" {
 		return errfmt.Errorf(`a via entry is an action name or {"prefix": ...}`)
 	}
 	a.Prefix = p.Prefix
@@ -117,9 +117,9 @@ func (a *ActionRef) UnmarshalJSON(b []byte) error {
 // MarshalJSON writes the form UnmarshalJSON reads.
 func (a ActionRef) MarshalJSON() ([]byte, error) {
 	if a.Prefix != "" {
-		return json.Marshal(map[string]string{"prefix": a.Prefix})
+		return jsonx.Marshal(map[string]string{"prefix": a.Prefix})
 	}
-	return json.Marshal(a.Name)
+	return jsonx.Marshal(a.Name)
 }
 
 // Matches reports whether action is this entry.

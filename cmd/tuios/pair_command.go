@@ -40,6 +40,7 @@ import (
 	"github.com/Gaurav-Gosain/tuios/internal/config"
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 	"github.com/Gaurav-Gosain/tuios/internal/federation"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 	"github.com/Gaurav-Gosain/tuios/internal/pathroot"
 	"github.com/Gaurav-Gosain/tuios/internal/session"
 )
@@ -1172,7 +1173,7 @@ func (s *pairServer) handle(r pairHTTP) (int, pairReply, *pairResult) {
 		return refuse(http.StatusBadRequest, "The request is not a complete HTTP request.")
 	}
 	var req pairRequest
-	if err := json.Unmarshal(r.body, &req); err != nil || req.Device == "" || req.Key == "" || req.MAC == "" {
+	if err := jsonx.Unmarshal(r.body, &req); err != nil || req.Device == "" || req.Key == "" || req.MAC == "" {
 		return refuse(http.StatusBadRequest, "The request must be JSON with device, key and mac.")
 	}
 	want := pairMAC(s.token, pairProtocol+"\n"+req.Device+"\n"+req.Key)
@@ -1523,7 +1524,7 @@ func appendAuthorizedKey(path, line string) error {
 // writePairReply writes the reply and its status line. The connection
 // closes after it.
 func writePairReply(w io.Writer, status int, reply pairReply) {
-	body, _ := json.Marshal(reply)
+	body, _ := jsonx.Marshal(reply)
 	body = append(body, '\n')
 	_, _ = fmt.Fprintf(w, "HTTP/1.1 %d %s\r\nContent-Type: application/json\r\nCache-Control: no-store\r\nContent-Length: %d\r\nConnection: close\r\n\r\n",
 		status, http.StatusText(status), len(body))

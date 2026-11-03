@@ -3,7 +3,6 @@ package integration
 import (
 	"bytes"
 	_ "embed"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -17,6 +16,7 @@ import (
 	"sync"
 
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 	"github.com/Gaurav-Gosain/tuios/internal/tarpack"
 )
 
@@ -165,7 +165,7 @@ func (t *Target) files(env Env) []extraFile {
 // and for the opencode template, which Kilo shares, the harness.
 func renderTemplate(name string) func(t *Target, tuios string) []byte {
 	return func(t *Target, tuios string) []byte {
-		cmd, _ := json.Marshal(tuios)
+		cmd, _ := jsonx.Marshal(tuios)
 		out := strings.ReplaceAll(string(assets()[name]), "__TUIOS_COMMAND__", string(cmd))
 		out = strings.ReplaceAll(out, "__TUIOS_VERSION__", strconv.Itoa(t.Version))
 		out = strings.ReplaceAll(out, "__TUIOS_HARNESS__", t.ID)
@@ -827,13 +827,13 @@ func installedPrograms(t *Target, files [][]byte) []string {
 	for _, data := range files {
 		for _, m := range pluginProgramRe.FindAllSubmatch(data, -1) {
 			var p string
-			if json.Unmarshal(m[1], &p) == nil {
+			if jsonx.Unmarshal(m[1], &p) == nil {
 				add(p)
 			}
 		}
 		for _, m := range hook.FindAllSubmatch(data, -1) {
 			var p string
-			if json.Unmarshal([]byte(`"`+string(m[1])+`"`), &p) == nil {
+			if jsonx.Unmarshal([]byte(`"`+string(m[1])+`"`), &p) == nil {
 				add(p)
 			}
 		}

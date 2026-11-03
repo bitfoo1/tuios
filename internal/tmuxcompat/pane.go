@@ -2,13 +2,13 @@ package tmuxcompat
 
 import (
 	"bufio"
-	"encoding/json"
 	"net"
 	"os"
 	"strings"
 	"time"
 
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 )
 
 // The pane holder.
@@ -58,7 +58,7 @@ func RequestRespawn(dir, windowID string, req RespawnRequest) error {
 	defer func() { _ = conn.Close() }()
 	_ = conn.SetDeadline(time.Now().Add(10 * time.Second))
 	req.Window = windowID
-	line, err := json.Marshal(req)
+	line, err := jsonx.Marshal(req)
 	if err != nil {
 		return err
 	}
@@ -70,7 +70,7 @@ func RequestRespawn(dir, windowID string, req RespawnRequest) error {
 		return errfmt.Errorf("pane %s did not answer: %w", PaneID(windowID), err)
 	}
 	var r respawnReply
-	if err := json.Unmarshal(reply, &r); err != nil {
+	if err := jsonx.Unmarshal(reply, &r); err != nil {
 		return errfmt.Errorf("pane %s answered %q", PaneID(windowID), strings.TrimSpace(string(reply)))
 	}
 	if !r.OK {

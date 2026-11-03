@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
+	"github.com/Gaurav-Gosain/tuios/internal/jsonx"
 	"github.com/Gaurav-Gosain/tuios/internal/lazyre"
 )
 
@@ -93,7 +94,7 @@ func (d *Daemon) followRenamedSession(verb string, params json.RawMessage) json.
 		return params
 	}
 	var m map[string]json.RawMessage
-	if err := json.Unmarshal(params, &m); err != nil {
+	if err := jsonx.Unmarshal(params, &m); err != nil {
 		return params
 	}
 	raw, ok := m["session"]
@@ -101,15 +102,15 @@ func (d *Daemon) followRenamedSession(verb string, params json.RawMessage) json.
 		return params
 	}
 	var name string
-	if err := json.Unmarshal(raw, &name); err != nil || name == "" {
+	if err := jsonx.Unmarshal(raw, &name); err != nil || name == "" {
 		return params
 	}
 	sess, renamed := d.manager.ResolveSession(name)
 	if !renamed || sess == nil {
 		return params
 	}
-	m["session"], _ = json.Marshal(sess.Name())
-	out, err := json.Marshal(m)
+	m["session"], _ = jsonx.Marshal(sess.Name())
+	out, err := jsonx.Marshal(m)
 	if err != nil {
 		return params
 	}
@@ -142,7 +143,7 @@ func (d *Daemon) followOwnPane(cs *connState, verb string, params json.RawMessag
 		Session string `json:"session"`
 		Window  string `json:"window"`
 	}
-	if json.Unmarshal(params, &named) != nil || named.Session == "" || named.Window == "" {
+	if jsonx.Unmarshal(params, &named) != nil || named.Session == "" || named.Window == "" {
 		return params
 	}
 	if s, renamed := d.manager.ResolveSession(named.Session); s != nil && !renamed {
@@ -158,16 +159,16 @@ func (d *Daemon) followOwnPane(cs *connState, verb string, params json.RawMessag
 	// The struct decode matches keys without regard to case, so the rewrite
 	// goes ahead only when the exact keys hold the values checked above.
 	var m map[string]json.RawMessage
-	if err := json.Unmarshal(params, &m); err != nil {
+	if err := jsonx.Unmarshal(params, &m); err != nil {
 		return params
 	}
 	var session, window string
-	if json.Unmarshal(m["session"], &session) != nil || session != named.Session ||
-		json.Unmarshal(m["window"], &window) != nil || window != named.Window {
+	if jsonx.Unmarshal(m["session"], &session) != nil || session != named.Session ||
+		jsonx.Unmarshal(m["window"], &window) != nil || window != named.Window {
 		return params
 	}
-	m["session"], _ = json.Marshal(holder.Name())
-	out, err := json.Marshal(m)
+	m["session"], _ = jsonx.Marshal(holder.Name())
+	out, err := jsonx.Marshal(m)
 	if err != nil {
 		return params
 	}
