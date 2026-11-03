@@ -11,6 +11,7 @@ import (
 
 	"charm.land/lipgloss/v2"
 	"charm.land/lipgloss/v2/table"
+	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 	"github.com/Gaurav-Gosain/tuios/internal/pathroot"
 	"github.com/Gaurav-Gosain/tuios/internal/plural"
 	"github.com/spf13/cobra"
@@ -215,7 +216,7 @@ func stashAttachments(t *verbTarget, paths []string, notes io.Writer) ([]string,
 		Dir string `json:"dir"`
 	}
 	if err := json.Unmarshal(raw, &listing); err != nil {
-		return nil, fmt.Errorf("failed to parse the stash listing from %s: %w", t.host, err)
+		return nil, errfmt.Errorf("failed to parse the stash listing from %s: %w", t.host, err)
 	}
 	return stashAttachmentsWith(paths, listing.Dir, t.host, notes, func(params map[string]any) (json.RawMessage, error) {
 		raw, err := t.client.Call("stash-put", t.params(params))
@@ -249,7 +250,7 @@ func stashAttachmentsWith(paths []string, farRoot, host string, notes io.Writer,
 			Path string `json:"path"`
 		}
 		if err := json.Unmarshal(raw, &res); err != nil || res.Path == "" {
-			return nil, fmt.Errorf("the stash put for %s returned no stored path", path)
+			return nil, errfmt.Errorf("the stash put for %s returned no stored path", path)
 		}
 		fmt.Fprintf(notes, "Sent %s to %s's stash.\n", plainLine(filepath.Base(path)), plainLine(host))
 		out = append(out, res.Path)
@@ -288,10 +289,10 @@ func readForTransfer(path string) (string, error) {
 	defer func() { _ = f.Close() }()
 	info, err := f.Stat()
 	if err != nil {
-		return "", fmt.Errorf("cannot read %s: %w", path, err)
+		return "", errfmt.Errorf("cannot read %s: %w", path, err)
 	}
 	if !info.Mode().IsRegular() {
-		return "", fmt.Errorf("%s is not a regular file. The stash stores one file at a time", path)
+		return "", errfmt.Errorf("%s is not a regular file. The stash stores one file at a time", path)
 	}
 	if info.Size() > stashTransferMaxBytes {
 		return "", transferTooLarge(path, info.Size())
@@ -301,7 +302,7 @@ func readForTransfer(path string) (string, error) {
 	}
 	data, err := io.ReadAll(io.LimitReader(f, stashTransferMaxBytes+1))
 	if err != nil {
-		return "", fmt.Errorf("cannot read %s: %w", path, err)
+		return "", errfmt.Errorf("cannot read %s: %w", path, err)
 	}
 	if len(data) > stashTransferMaxBytes {
 		return "", transferTooLarge(path, int64(len(data)))
@@ -316,7 +317,7 @@ var afterTransferStat func(*os.File)
 // transferTooLarge is the refusal for a file over the transfer cap. size is
 // what was seen, which for a growing file is only a lower bound.
 func transferTooLarge(path string, size int64) error {
-	return fmt.Errorf("%s is at least %d bytes. A file sent to another machine is capped at %d MB", path, size, stashTransferMaxBytes>>20)
+	return errfmt.Errorf("%s is at least %d bytes. A file sent to another machine is capped at %d MB", path, size, stashTransferMaxBytes>>20)
 }
 
 // runStashGet copies a stashed file out of a session store to a path here.
@@ -337,17 +338,17 @@ func runStashGet(sessionName, stored, out string, jsonOutput bool) error {
 		Content string `json:"content"`
 	}
 	if err := json.Unmarshal(raw, &res); err != nil {
-		return fmt.Errorf("failed to parse response: %w", err)
+		return errfmt.Errorf("failed to parse response: %w", err)
 	}
 	data, err := base64.StdEncoding.DecodeString(res.Content)
 	if err != nil {
-		return fmt.Errorf("the daemon%s sent content this build cannot read: %w", t.on(), err)
+		return errfmt.Errorf("the daemon%s sent content this build cannot read: %w", t.on(), err)
 	}
 	if out == "" {
 		out = res.Name
 	}
 	if err := os.WriteFile(out, data, 0o600); err != nil {
-		return fmt.Errorf("cannot write %s: %w", out, err)
+		return errfmt.Errorf("cannot write %s: %w", out, err)
 	}
 	if jsonOutput {
 		outputJSON(stashGetJSON(out, len(data), t.host, stored))
@@ -387,7 +388,7 @@ func printStashPut(out, notes io.Writer, raw json.RawMessage) error {
 		Evictions uint64 `json:"evictions"`
 	}
 	if err := json.Unmarshal(raw, &res); err != nil {
-		return fmt.Errorf("failed to parse response: %w", err)
+		return errfmt.Errorf("failed to parse response: %w", err)
 	}
 	fmt.Fprintln(out, res.Path)
 	note := fmt.Sprintf("stored %s", stashBytes(res.Bytes))
@@ -431,7 +432,7 @@ func printStashList(w io.Writer, raw json.RawMessage) error {
 		MaxBytes int64           `json:"max_bytes"`
 	}
 	if err := json.Unmarshal(raw, &res); err != nil {
-		return fmt.Errorf("failed to parse response: %w", err)
+		return errfmt.Errorf("failed to parse response: %w", err)
 	}
 	if len(res.Entries) == 0 {
 		fmt.Fprintln(w, "The session store is empty. 'tuios stash put <file>' puts a file in it.")

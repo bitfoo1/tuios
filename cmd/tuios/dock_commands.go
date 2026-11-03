@@ -7,6 +7,7 @@ import (
 
 	"charm.land/lipgloss/v2"
 	"charm.land/lipgloss/v2/table"
+	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 	"github.com/Gaurav-Gosain/tuios/internal/plural"
 )
 
@@ -76,7 +77,7 @@ func runRefreshDock(sessionName, component string, jsonOutput bool) error {
 		Component string `json:"component"`
 	}
 	if err := json.Unmarshal(raw, &res); err != nil {
-		return fmt.Errorf("failed to parse response: %w", err)
+		return errfmt.Errorf("failed to parse response: %w", err)
 	}
 	if res.Component == "all" {
 		fmt.Println("Refreshed every dock component.")
@@ -92,7 +93,7 @@ func printDockComponentList(raw json.RawMessage) error {
 		Components []dockComponentRow `json:"components"`
 	}
 	if err := json.Unmarshal(raw, &res); err != nil {
-		return fmt.Errorf("failed to parse response: %w", err)
+		return errfmt.Errorf("failed to parse response: %w", err)
 	}
 	if len(res.Components) == 0 {
 		fmt.Println("The dock draws no components. Check the [dock] table in your config.")

@@ -12,6 +12,7 @@ import (
 
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
+	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 	"github.com/charmbracelet/x/ansi"
 )
 
@@ -61,7 +62,7 @@ type saverFile struct {
 // wrong, for tuios plugins check.
 func parseSaverFile(data []byte) (*saverFile, error) {
 	if len(data) > saverMaxBytes {
-		return nil, fmt.Errorf("the file is larger than %d bytes", saverMaxBytes)
+		return nil, errfmt.Errorf("the file is larger than %d bytes", saverMaxBytes)
 	}
 	f := &saverFile{palette: map[byte]lipgloss.Style{}}
 	delay := 100 * time.Millisecond
@@ -76,7 +77,7 @@ func parseSaverFile(data []byte) (*saverFile, error) {
 		return strings.TrimRight(sc.Text(), "\r"), true
 	}
 	fail := func(format string, a ...any) error {
-		return fmt.Errorf("line %d: %s", n, fmt.Sprintf(format, a...))
+		return errfmt.Errorf("line %d: %s", n, fmt.Sprintf(format, a...))
 	}
 	if line, ok := next(); !ok || strings.TrimSpace(line) != "tuios-saver 1" {
 		return nil, fail("the first line must be tuios-saver 1")
@@ -189,7 +190,7 @@ func saverStyle(spec string) (lipgloss.Style, error) {
 			return lipgloss.NewStyle().Foreground(lipgloss.Color(spec)), nil
 		}
 	}
-	return lipgloss.Style{}, fmt.Errorf("unknown colour %q. Use #rrggbb or an ANSI name such as bright_blue", spec)
+	return lipgloss.Style{}, errfmt.Errorf("unknown colour %q. Use #rrggbb or an ANSI name such as bright_blue", spec)
 }
 
 // render draws every frame at the screen's size, centred.

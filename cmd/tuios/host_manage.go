@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/Gaurav-Gosain/tuios/internal/config"
+	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 	"github.com/Gaurav-Gosain/tuios/internal/federation"
 	"github.com/Gaurav-Gosain/tuios/internal/plural"
 	"github.com/Gaurav-Gosain/tuios/internal/session"
@@ -168,7 +169,7 @@ down. It needs the daemon and the link up.`,
 func runHostAdd(name, addr string, flags hostAddFlags) error {
 	path, err := config.GetConfigPath()
 	if err != nil {
-		return fmt.Errorf("cannot find the config file: %w", err)
+		return errfmt.Errorf("cannot find the config file: %w", err)
 	}
 	if err := federation.ValidHostName(name); err != nil {
 		return err
@@ -180,21 +181,21 @@ func runHostAdd(name, addr string, flags hostAddFlags) error {
 		// even if it is one the suggestion list would have left out.
 		found, ok := tailnetAddrFor(name)
 		if !ok {
-			return fmt.Errorf("no machine called %q on your tailnet.\nRun 'tuios hosts tailnet' to see what is there", name)
+			return errfmt.Errorf("no machine called %q on your tailnet.\nRun 'tuios hosts tailnet' to see what is there", name)
 		}
 		if addr != "" && addr != found {
-			return fmt.Errorf("host %q was given the address %s and --tailnet, which says %s.\nPass one or the other", name, addr, found)
+			return errfmt.Errorf("host %q was given the address %s and --tailnet, which says %s.\nPass one or the other", name, addr, found)
 		}
 		addr = found
 	}
 	if addr == "" {
-		return fmt.Errorf("host %q needs an address.\n%s", name, addrHelp())
+		return errfmt.Errorf("host %q needs an address.\n%s", name, addrHelp())
 	}
 	if strings.HasPrefix(strings.TrimSpace(addr), "-") || strings.HasPrefix(strings.TrimSpace(flags.command), "-") {
-		return fmt.Errorf("host %q was not added: the address and --command may not start with a dash, because ssh would read them as options", name)
+		return errfmt.Errorf("host %q was not added: the address and --command may not start with a dash, because ssh would read them as options", name)
 	}
 	if err := federation.CheckSSHOptions(flags.sshOptions); err != nil {
-		return fmt.Errorf("host %q was not added: %w", name, err)
+		return errfmt.Errorf("host %q was not added: %w", name, err)
 	}
 
 	existing, err := config.HostsInFile(path)
@@ -272,14 +273,14 @@ func probeAddedHost(name string) {
 func runHostRemove(name string) error {
 	path, err := config.GetConfigPath()
 	if err != nil {
-		return fmt.Errorf("cannot find the config file: %w", err)
+		return errfmt.Errorf("cannot find the config file: %w", err)
 	}
 	removed, err := config.RemoveHostFromFile(path, name)
 	if err != nil {
 		return err
 	}
 	if !removed {
-		return fmt.Errorf("no host is named %q. Run 'tuios hosts' to see the names", name)
+		return errfmt.Errorf("no host is named %q. Run 'tuios hosts' to see the names", name)
 	}
 	fmt.Printf("Host %s is removed. A running daemon closes the link now.\n", name)
 	return nil
@@ -439,7 +440,7 @@ func startHostDaemon(host federation.Host, res *hostTestResult, dryRun bool) err
 	}
 	res.HostReport = after
 	if after.Status != federation.StatusUp {
-		return fmt.Errorf("start-server ran on %s, and the link still reports %s", res.Host, after.Status)
+		return errfmt.Errorf("start-server ran on %s, and the link still reports %s", res.Host, after.Status)
 	}
 	return nil
 }
@@ -472,7 +473,7 @@ func dialHostOnce(host federation.Host, budget time.Duration) (federation.HostRe
 	m.Stop()
 
 	if len(reports) == 0 {
-		return federation.HostReport{}, fmt.Errorf("host %s did not report a state. Run 'tuios hosts' to see the links", host.Name)
+		return federation.HostReport{}, errfmt.Errorf("host %s did not report a state. Run 'tuios hosts' to see the links", host.Name)
 	}
 	return reports[0], nil
 }
@@ -493,7 +494,7 @@ func writeHostTest(w io.Writer, r federation.HostReport, starting bool) error {
 		// gives says it waits, which is true only of the daemon's link.
 		gate := federation.SSHGate{Kind: federation.GateTailscaleCheck, URL: r.ApprovalURL}
 		fmt.Fprintln(w, gate.Sentence())
-		return fmt.Errorf("host %s waits for a Tailscale approval", r.Host)
+		return errfmt.Errorf("host %s waits for a Tailscale approval", r.Host)
 	}
 	if r.Reason != "" {
 		fmt.Fprintln(w, r.Reason)
@@ -540,9 +541,9 @@ func writeHostTest(w io.Writer, r federation.HostReport, starting bool) error {
 		}
 	}
 	if r.Status == federation.StatusNoBinary {
-		return fmt.Errorf("host %s has no tuios that the link can find", r.Host)
+		return errfmt.Errorf("host %s has no tuios that the link can find", r.Host)
 	}
-	return fmt.Errorf("host %s is %s", r.Host, r.Status)
+	return errfmt.Errorf("host %s is %s", r.Host, r.Status)
 }
 
 // addrHelp is what to type for an address, with the ssh_config aliases this

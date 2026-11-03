@@ -4,13 +4,13 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"os"
 	"path/filepath"
 	"slices"
 	"strings"
 
 	"github.com/Gaurav-Gosain/tuios/internal/atomicfile"
+	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 	"github.com/Gaurav-Gosain/tuios/internal/sortx"
 )
 
@@ -71,7 +71,7 @@ func (s *Shim) readEnv(scope string) ([]envVar, error) {
 	}
 	var list []envVar
 	if err := json.Unmarshal(data, &list); err != nil {
-		return nil, fmt.Errorf("read %s: %w", path, err)
+		return nil, errfmt.Errorf("read %s: %w", path, err)
 	}
 	return list, nil
 }
@@ -194,7 +194,7 @@ func (s *Shim) showEnvironment(name string, args []string) (string, []string, er
 	if len(p.Args) == 1 {
 		i := slices.IndexFunc(list, func(e envVar) bool { return e.Name == p.Args[0] })
 		if i < 0 {
-			return OutcomeError, nil, fmt.Errorf("unknown variable: %s", p.Args[0])
+			return OutcomeError, nil, errfmt.Errorf("unknown variable: %s", p.Args[0])
 		}
 		if list[i].Hidden == p.Has('h') {
 			show(list[i])
@@ -273,7 +273,7 @@ func (s *Shim) setEnvironment(name string, args []string) (string, []string, err
 		list = append(list, envVar{Name: varName, Value: value, Remove: remove, Hidden: p.Has('h')})
 	}
 	if err := s.writeEnv(scope, list); err != nil {
-		return OutcomeError, detail, fmt.Errorf("set-environment: %w", err)
+		return OutcomeError, detail, errfmt.Errorf("set-environment: %w", err)
 	}
 	return outcomeFor(detail), detail, nil
 }

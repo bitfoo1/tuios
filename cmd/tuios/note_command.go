@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 	"github.com/spf13/cobra"
 )
 
@@ -130,7 +131,7 @@ func runSetNote(sessionName, window, note string, jsonOutput bool) error {
 		Note    string `json:"note"`
 	}
 	if err := json.Unmarshal(raw, &res); err != nil {
-		return fmt.Errorf("failed to parse response: %w", err)
+		return errfmt.Errorf("failed to parse response: %w", err)
 	}
 	what := "session " + res.Session
 	if res.Window != "" {
@@ -162,7 +163,7 @@ func runGetNote(sessionName, window string, jsonOutput bool) error {
 		Note string `json:"note"`
 	}
 	if err := json.Unmarshal(raw, &res); err != nil {
-		return fmt.Errorf("failed to parse response: %w", err)
+		return errfmt.Errorf("failed to parse response: %w", err)
 	}
 	if res.Note != "" {
 		fmt.Println(res.Note)

@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 
+	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 	"github.com/Gaurav-Gosain/tuios/internal/session"
 	"github.com/spf13/cobra"
 )
@@ -129,7 +130,7 @@ func runSubscribe(opts subscribeOptions, out io.Writer) error {
 			if errors.Is(err, io.EOF) {
 				return errors.New("the daemon closed the event stream. Resubscribe with --after-seq and --boot-id to pick up where it stopped")
 			}
-			return fmt.Errorf("failed to read the event stream: %w", err)
+			return errfmt.Errorf("failed to read the event stream: %w", err)
 		}
 		if t.host != "" {
 			line = t.result(json.RawMessage(line))

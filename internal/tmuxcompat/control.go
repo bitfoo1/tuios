@@ -11,6 +11,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 )
 
 // Control mode (tmux -C and -CC).
@@ -252,7 +254,7 @@ func (c *control) attach(args []string) (string, error) {
 			return OutcomeError, err
 		}
 	} else {
-		return OutcomeError, fmt.Errorf("can't find session: %s", tv)
+		return OutcomeError, errfmt.Errorf("can't find session: %s", tv)
 	}
 	c.sessID, c.sessName, c.prev = sv.id, sv.name, v
 	c.attaches++

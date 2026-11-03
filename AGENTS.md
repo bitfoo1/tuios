@@ -375,7 +375,9 @@ Tiling itself toggles on `Ctrl+B` `Space` (or bare `t` in window-management mode
 
 ### Error Handling
 
-- Wrap errors with context: `fmt.Errorf("failed to X: %w", err)`
+- Wrap errors with context: `errfmt.Errorf("failed to X: %w", err)`. It is
+  `fmt.Errorf` kept out of line, which saves about 115 bytes of binary per
+  call. `internal/lint` rejects `fmt.Errorf` in the binary's packages
 - Log warnings for non-fatal issues: `log.Printf("Warning: ...")`
 - Return early on errors
 

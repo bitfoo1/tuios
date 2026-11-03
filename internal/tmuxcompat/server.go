@@ -3,13 +3,13 @@ package tmuxcompat
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"path/filepath"
 	"slices"
 	"strconv"
 	"strings"
 
 	"github.com/Gaurav-Gosain/tuios/internal/config"
+	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 )
 
 // listClients prints one client for each session a tuios client is attached
@@ -29,7 +29,7 @@ func (s *Shim) listClients(name string, args []string) (string, []string, error)
 	if tv, ok := p.Value('t'); ok && tv != "" {
 		sv, found := v.sessionOf(strings.TrimSuffix(tv, ":"))
 		if !found {
-			return OutcomeError, nil, fmt.Errorf("can't find session: %s", tv)
+			return OutcomeError, nil, errfmt.Errorf("can't find session: %s", tv)
 		}
 		sessions = []*sessionView{sv}
 	}
@@ -91,7 +91,7 @@ func (s *Shim) detachClient(name string, args []string) (string, []string, error
 		ref := strings.TrimSuffix(sv, ":")
 		target, found := v.sessionOf(ref)
 		if !found {
-			return OutcomeError, nil, fmt.Errorf("can't find session: %s", ref)
+			return OutcomeError, nil, errfmt.Errorf("can't find session: %s", ref)
 		}
 		params["session"] = target.name
 	} else {
@@ -99,7 +99,7 @@ func (s *Shim) detachClient(name string, args []string) (string, []string, error
 		if tv, ok := p.Value('t'); ok && tv != "" {
 			sessName, isClient := strings.CutPrefix(tv, "tuios-")
 			if !isClient {
-				return OutcomeError, nil, fmt.Errorf("can't find client: %s", tv)
+				return OutcomeError, nil, errfmt.Errorf("can't find client: %s", tv)
 			}
 			ref = sessName
 		}
@@ -107,7 +107,7 @@ func (s *Shim) detachClient(name string, args []string) (string, []string, error
 		case ref != "":
 			target, found := v.sessionOf(ref)
 			if !found {
-				return OutcomeError, nil, fmt.Errorf("can't find client: tuios-%s", ref)
+				return OutcomeError, nil, errfmt.Errorf("can't find client: tuios-%s", ref)
 			}
 			params["session"] = target.name
 		case s.callerPane(v) == nil:
@@ -191,10 +191,10 @@ func (s *Shim) daemonOption(params map[string]any, v any) bool {
 // daemon.window_size. tmux's manual has no tuios equivalent and is refused.
 func (s *Shim) setWindowSize(value string) (string, error) {
 	if !slices.Contains(config.WindowSizeModes, value) {
-		return OutcomeError, fmt.Errorf("window-size: %s is not supported, use smallest, largest or latest", value)
+		return OutcomeError, errfmt.Errorf("window-size: %s is not supported, use smallest, largest or latest", value)
 	}
 	if _, err := s.Caller.Call("set-option", map[string]any{"session": s.Session, "key": "daemon.window_size", "value": value}); err != nil {
-		return OutcomeError, fmt.Errorf("window-size: %w", err)
+		return OutcomeError, errfmt.Errorf("window-size: %w", err)
 	}
 	return OutcomeOK, nil
 }
@@ -239,7 +239,7 @@ func (s *Shim) showOptions(name string, args []string) (string, []string, error)
 		return OutcomeUnsupported, nil, err
 	}
 	if len(p.Args) > 1 {
-		return OutcomeError, nil, fmt.Errorf("%s: give at most one option", name)
+		return OutcomeError, nil, errfmt.Errorf("%s: give at most one option", name)
 	}
 	valueOnly := p.Has('v')
 	if len(p.Args) == 1 {
@@ -249,7 +249,7 @@ func (s *Shim) showOptions(name string, args []string) (string, []string, error)
 			if p.Has('q') {
 				return OutcomeOK, nil, nil
 			}
-			return OutcomeError, nil, fmt.Errorf("invalid option: %s", want)
+			return OutcomeError, nil, errfmt.Errorf("invalid option: %s", want)
 		}
 		val := options[i].value(s)
 		if valueOnly {
@@ -337,9 +337,9 @@ func (s *Shim) newSession(name string, args []string) (string, []string, error) 
 	if err != nil {
 		var coded interface{ ErrorCode() string }
 		if errors.As(err, &coded) && coded.ErrorCode() == "session_exists" {
-			return OutcomeError, detail, fmt.Errorf("duplicate session: %s", sessName)
+			return OutcomeError, detail, errfmt.Errorf("duplicate session: %s", sessName)
 		}
-		return OutcomeError, detail, fmt.Errorf("create session failed: %w", err)
+		return OutcomeError, detail, errfmt.Errorf("create session failed: %w", err)
 	}
 	var res struct {
 		Session  string `json:"session"`

@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 	"github.com/spf13/cobra"
 )
 
@@ -94,7 +95,7 @@ task claim needs. It is checked before anything starts.`,
 				positional, extra = args[:dash], args[dash:]
 			}
 			if len(positional) != 1 {
-				return fmt.Errorf("start-agent takes one agent, got %d arguments. Quote the agent with its arguments, pass the prompt with --prompt, and put more arguments for the agent after --", len(positional))
+				return errfmt.Errorf("start-agent takes one agent, got %d arguments. Quote the agent with its arguments, pass the prompt with --prompt, and put more arguments for the agent after --", len(positional))
 			}
 			callerEnv, err := fanCallerEnv(env, os.Getenv, os.Environ())
 			if err != nil {
@@ -260,7 +261,7 @@ func runStartAgent(o startAgentOptions, jsonOutput bool) error {
 		TaskNote string `json:"task_note"`
 	}
 	if err := json.Unmarshal(raw, &res); err != nil {
-		return fmt.Errorf("failed to parse response: %w", err)
+		return errfmt.Errorf("failed to parse response: %w", err)
 	}
 	if jsonOutput {
 		if err := printVerbResultOn(t, raw, true); err != nil {

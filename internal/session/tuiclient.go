@@ -13,6 +13,8 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 )
 
 // RemoteCommandHandler is a callback for handling remote commands from the CLI.
@@ -432,7 +434,7 @@ func (c *TUIClient) Connect(version string, width, height int) error {
 func (c *TUIClient) ConnectWithCapabilities(version string, width, height int, caps *ClientCapabilities) error {
 	socketPath, err := GetSocketPath()
 	if err != nil {
-		return fmt.Errorf("failed to get socket path: %w", err)
+		return errfmt.Errorf("failed to get socket path: %w", err)
 	}
 
 	dialWait := 5 * time.Second
@@ -441,7 +443,7 @@ func (c *TUIClient) ConnectWithCapabilities(version string, width, height int, c
 	}
 	conn, err := net.DialTimeout("unix", socketPath, dialWait)
 	if err != nil {
-		return fmt.Errorf("failed to connect to daemon: %w", err)
+		return errfmt.Errorf("failed to connect to daemon: %w", err)
 	}
 	c.conn = conn
 	c.br = nil
@@ -541,7 +543,7 @@ func (c *TUIClient) handshake(version string, width, height int, caps *ClientCap
 		if errPayload.Code == ErrCodeBusy {
 			return ErrTooManyConnections
 		}
-		return fmt.Errorf("the daemon refused this client: %s", errPayload.Message)
+		return errfmt.Errorf("the daemon refused this client: %s", errPayload.Message)
 	}
 	if resp.Type != MsgWelcome {
 		// A daemon that numbers its messages differently answers the hello with
@@ -554,7 +556,7 @@ func (c *TUIClient) handshake(version string, width, height int, caps *ClientCap
 
 	var welcome WelcomePayload
 	if err := resp.ParsePayload(&welcome); err != nil {
-		return fmt.Errorf("failed to parse welcome: %w", err)
+		return errfmt.Errorf("failed to parse welcome: %w", err)
 	}
 
 	// Refuse before anything else is exchanged. Proceeding on a protocol the
@@ -682,7 +684,7 @@ func (c *TUIClient) AttachSession(name string, createNew bool, width, height int
 		return nil, refusalOf(errPayload)
 
 	default:
-		return nil, fmt.Errorf("unexpected response: %d", resp.Type)
+		return nil, errfmt.Errorf("unexpected response: %d", resp.Type)
 	}
 }
 
@@ -706,7 +708,7 @@ func (c *TUIClient) takeAttachReply(resp *Message) (*SessionState, error) {
 	c.startPushes()
 	c.appliedSeq.Store(stateSeq(payload.State))
 	if err := validateSessionState(payload.State); err != nil {
-		return nil, fmt.Errorf("attach: the session state the daemon sent was refused: %w", err)
+		return nil, errfmt.Errorf("attach: the session state the daemon sent was refused: %w", err)
 	}
 	c.NoteSession(payload.SessionName)
 	// The attach reply starts the session's numbering over: a switch to
@@ -811,7 +813,7 @@ func (c *TUIClient) SwitchSession(targetName string, width, height int) (*Sessio
 	// 1. Detach (fire-and-forget, daemon sends MsgDetached back)
 	detachMsg, err := NewMessage(MsgDetach, nil)
 	if err != nil {
-		return nil, fmt.Errorf("detach encode: %w", err)
+		return nil, errfmt.Errorf("detach encode: %w", err)
 	}
 
 	// Register for detach response before sending
@@ -821,7 +823,7 @@ func (c *TUIClient) SwitchSession(targetName string, width, height int) (*Sessio
 	c.pendingResponsesMu.Unlock()
 
 	if err := c.send(detachMsg); err != nil {
-		return nil, fmt.Errorf("detach send: %w", err)
+		return nil, errfmt.Errorf("detach send: %w", err)
 	}
 
 	debugLog("[SWITCH] Detach sent, waiting for confirmation...")
@@ -831,9 +833,9 @@ func (c *TUIClient) SwitchSession(targetName string, width, height int) (*Sessio
 	case <-detachResp:
 		debugLog("[SWITCH] Detach confirmed")
 	case <-time.After(5 * time.Second):
-		return nil, fmt.Errorf("detach timeout")
+		return nil, errfmt.Errorf("detach timeout")
 	case <-c.done:
-		return nil, fmt.Errorf("client closed")
+		return nil, errfmt.Errorf("client closed")
 	}
 
 	// Clean up pending response registration
@@ -897,12 +899,12 @@ func (c *TUIClient) attachWhileReading(name string, createNew bool, width, heigh
 		Passive:       c.Passive,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("attach encode: %w", err)
+		return nil, errfmt.Errorf("attach encode: %w", err)
 	}
 
 	resp, err := c.sendAndWaitResponse(msg, MsgAttached, MsgError)
 	if err != nil {
-		return nil, fmt.Errorf("attach: %w", err)
+		return nil, errfmt.Errorf("attach: %w", err)
 	}
 
 	switch resp.Type {
@@ -915,7 +917,7 @@ func (c *TUIClient) attachWhileReading(name string, createNew bool, width, heigh
 		return nil, refusalOf(errPayload)
 
 	default:
-		return nil, fmt.Errorf("unexpected response: %d", resp.Type)
+		return nil, errfmt.Errorf("unexpected response: %d", resp.Type)
 	}
 }
 
@@ -948,10 +950,10 @@ func (c *TUIClient) CreatePTY(title, windowID string, width, height int) (string
 	case MsgError:
 		var errPayload ErrorPayload
 		_ = resp.ParsePayload(&errPayload)
-		return "", fmt.Errorf("create PTY failed: %s", errPayload.Message)
+		return "", errfmt.Errorf("create PTY failed: %s", errPayload.Message)
 
 	default:
-		return "", fmt.Errorf("unexpected response: %d", resp.Type)
+		return "", errfmt.Errorf("unexpected response: %d", resp.Type)
 	}
 }
 
@@ -990,10 +992,10 @@ func (c *TUIClient) ReadDir(windowID, dir string, max int, pinned bool) (*DirLis
 	case MsgError:
 		var errPayload ErrorPayload
 		_ = resp.ParsePayload(&errPayload)
-		return nil, fmt.Errorf("read dir failed: %s", errPayload.Message)
+		return nil, errfmt.Errorf("read dir failed: %s", errPayload.Message)
 
 	default:
-		return nil, fmt.Errorf("unexpected response: %d", resp.Type)
+		return nil, errfmt.Errorf("unexpected response: %d", resp.Type)
 	}
 }
 
@@ -1755,7 +1757,7 @@ func (c *TUIClient) KillSession() error {
 // rather than the phantom success the old fire-and-forget send always reported.
 func (c *TUIClient) KillSessionByName(name string) error {
 	if name == "" {
-		return fmt.Errorf("session name cannot be empty")
+		return errfmt.Errorf("session name cannot be empty")
 	}
 	msg, err := NewMessage(MsgKill, &KillPayload{
 		SessionName: name,
@@ -1771,7 +1773,7 @@ func (c *TUIClient) KillSessionByName(name string) error {
 	if resp.Type == MsgError {
 		var errPayload ErrorPayload
 		_ = resp.ParsePayload(&errPayload)
-		return fmt.Errorf("kill session: %s", errPayload.Message)
+		return errfmt.Errorf("kill session: %s", errPayload.Message)
 	}
 	var payload SessionListPayload
 	if err := resp.ParsePayload(&payload); err != nil {
@@ -1840,23 +1842,23 @@ func (c *TUIClient) GetTerminalState(ptyID string, maxScrollback, have int) (*Te
 		if payload.PTYID != ptyID {
 			// A tagged reply is the answer to this request, so this is a
 			// daemon fault, and the state is not applied to the wrong pane.
-			return nil, fmt.Errorf("get terminal state: the daemon answered for pane %s, not %s", shortID(payload.PTYID), shortID(ptyID))
+			return nil, errfmt.Errorf("get terminal state: the daemon answered for pane %s, not %s", shortID(payload.PTYID), shortID(ptyID))
 		}
 		// The cells were asked for packed and stay packed: ApplyTerminalState
 		// reads them in that form. They are checked here, so a malformed
 		// snapshot fails the request rather than being half applied.
 		if err := payload.State.CheckPacked(); err != nil {
-			return nil, fmt.Errorf("get terminal state: %w", err)
+			return nil, errfmt.Errorf("get terminal state: %w", err)
 		}
 		return payload.State, nil
 
 	case MsgError:
 		var errPayload ErrorPayload
 		_ = resp.ParsePayload(&errPayload)
-		return nil, fmt.Errorf("get terminal state failed: %s", errPayload.Message)
+		return nil, errfmt.Errorf("get terminal state failed: %s", errPayload.Message)
 
 	default:
-		return nil, fmt.Errorf("unexpected response: %d", resp.Type)
+		return nil, errfmt.Errorf("unexpected response: %d", resp.Type)
 	}
 }
 
@@ -2566,7 +2568,7 @@ func (c *TUIClient) createSession(name string, width, height int, global bool) e
 	if resp.Type == MsgError {
 		var errPayload ErrorPayload
 		_ = resp.ParsePayload(&errPayload)
-		return fmt.Errorf("create session: %s", errPayload.Message)
+		return errfmt.Errorf("create session: %s", errPayload.Message)
 	}
 	var payload SessionListPayload
 	if err := resp.ParsePayload(&payload); err != nil {
@@ -2592,7 +2594,7 @@ func (c *TUIClient) RefreshSessionList() ([]SessionInfo, error) {
 	if resp.Type == MsgError {
 		var errPayload ErrorPayload
 		_ = resp.ParsePayload(&errPayload)
-		return nil, fmt.Errorf("list sessions: %s", errPayload.Message)
+		return nil, errfmt.Errorf("list sessions: %s", errPayload.Message)
 	}
 	var payload SessionListPayload
 	if err := resp.ParsePayload(&payload); err != nil {
@@ -2930,9 +2932,9 @@ func (c *TUIClient) sendAndWaitMatching(msg *Message, accept func(*Message) bool
 	case resp := <-respChan:
 		return resp, nil
 	case <-time.After(roundTripTimeout):
-		return nil, fmt.Errorf("timeout waiting for response")
+		return nil, errfmt.Errorf("timeout waiting for response")
 	case <-c.done:
-		return nil, fmt.Errorf("client closed")
+		return nil, errfmt.Errorf("client closed")
 	}
 }
 

@@ -5,13 +5,13 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"os"
 	"strconv"
 	"strings"
 	"time"
 	"unicode"
 
+	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 	"github.com/Gaurav-Gosain/tuios/internal/pastebuf"
 	"tuios.dev/vt"
 )
@@ -333,7 +333,7 @@ func (d *Daemon) uploadPart(cs *connState, id string, part []byte, last bool, ma
 	u.touched = now
 	if len(u.data)+len(part) > maxBytes {
 		delete(d.uploads, cs)
-		return nil, d.bufferError("set-buffer", fmt.Errorf("%w: more than %d bytes", pastebuf.ErrTooLarge, maxBytes))
+		return nil, d.bufferError("set-buffer", errfmt.Errorf("%w: more than %d bytes", pastebuf.ErrTooLarge, maxBytes))
 	}
 	if total+len(u.data)+len(part) > maxBytes {
 		delete(d.uploads, cs)

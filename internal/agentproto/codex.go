@@ -3,11 +3,12 @@ package agentproto
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 )
 
 // The Codex app-server client, v2 threads and turns.
@@ -83,10 +84,10 @@ func (c *Codex) Start(ctx context.Context, cwd string) (Info, error) {
 		"capabilities": map[string]any{"experimentalApi": false, "requestAttestation": false},
 	}, &init)
 	if err != nil {
-		return Info{}, fmt.Errorf("initialize: %w", err)
+		return Info{}, errfmt.Errorf("initialize: %w", err)
 	}
 	if err := c.conn.Notify("initialized", nil); err != nil {
-		return Info{}, fmt.Errorf("initialized: %w", err)
+		return Info{}, errfmt.Errorf("initialized: %w", err)
 	}
 	info := Info{Agent: init.UserAgent}
 	var started struct {
@@ -100,10 +101,10 @@ func (c *Codex) Start(ctx context.Context, cwd string) (Info, error) {
 		params["cwd"] = cwd
 	}
 	if err := c.conn.Call(ctx, "thread/start", params, &started); err != nil {
-		return info, fmt.Errorf("thread/start: %w", err)
+		return info, errfmt.Errorf("thread/start: %w", err)
 	}
 	if started.Thread.ID == "" {
-		return info, fmt.Errorf("thread/start: codex returned no thread id")
+		return info, errfmt.Errorf("thread/start: codex returned no thread id")
 	}
 	c.mu.Lock()
 	c.thread = started.Thread.ID

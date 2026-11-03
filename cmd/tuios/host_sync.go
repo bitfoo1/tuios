@@ -22,6 +22,7 @@ import (
 	"charm.land/lipgloss/v2"
 	"charm.land/lipgloss/v2/table"
 	"github.com/Gaurav-Gosain/tuios/internal/config"
+	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 	"github.com/Gaurav-Gosain/tuios/internal/federation"
 	"github.com/Gaurav-Gosain/tuios/internal/plural"
 	"github.com/Gaurav-Gosain/tuios/internal/release"
@@ -461,7 +462,7 @@ func runHostsSync(opts syncOptions) error {
 		if opts.json {
 			return &diagnosticError{What: plural.Count(failed, "host") + " failed.", Status: 1}
 		}
-		return fmt.Errorf("%d of %s failed. The rows above say why", failed, plural.Count(len(targets), "host"))
+		return errfmt.Errorf("%d of %s failed. The rows above say why", failed, plural.Count(len(targets), "host"))
 	}
 	return nil
 }
@@ -485,7 +486,7 @@ func forEachTarget(targets []*syncTarget, fn func(*syncTarget)) {
 func resolveSyncTargets(opts syncOptions) ([]*syncTarget, error) {
 	cfgPath, err := config.GetConfigPath()
 	if err != nil {
-		return nil, fmt.Errorf("cannot find the config file: %w", err)
+		return nil, errfmt.Errorf("cannot find the config file: %w", err)
 	}
 	hosts, err := config.HostsInFile(cfgPath)
 	if err != nil {
@@ -508,7 +509,7 @@ func resolveSyncTargets(opts syncOptions) ([]*syncTarget, error) {
 				continue
 			}
 			if _, ok := hosts[n]; !ok {
-				return nil, fmt.Errorf("no host is named %q in the config. Run 'tuios hosts' to see the names", n)
+				return nil, errfmt.Errorf("no host is named %q in the config. Run 'tuios hosts' to see the names", n)
 			}
 			if !slices.Contains(names, n) {
 				names = append(names, n)
@@ -573,7 +574,7 @@ func chooseSyncSource(opts syncOptions) (*syncSource, error) {
 			}
 			found, ok := findTuiosCheckout(abs)
 			if !ok || found != abs {
-				return nil, fmt.Errorf("%s is not a tuios checkout. --src names the folder that holds its go.mod", dir)
+				return nil, errfmt.Errorf("%s is not a tuios checkout. --src names the folder that holds its go.mod", dir)
 			}
 			dir = found
 		}
@@ -642,7 +643,7 @@ func (s *syncSource) errFor(platform string) error {
 		return err
 	}
 	if s.built[platform] == nil {
-		return fmt.Errorf("no binary was made for %s", platform)
+		return errfmt.Errorf("no binary was made for %s", platform)
 	}
 	return nil
 }
@@ -698,7 +699,7 @@ func (s *syncSource) prepare(platforms []string) error {
 func planSyncTarget(t *syncTarget, src *syncSource, opts syncOptions) {
 	t.platform = t.res.OS + "/" + t.res.Arch
 	if src.kind == sourceBinary && t.platform != src.platform {
-		t.fail(fmt.Errorf("the binary is for %s and %s runs %s", src.platform, t.name, t.platform))
+		t.fail(errfmt.Errorf("the binary is for %s and %s runs %s", src.platform, t.name, t.platform))
 		return
 	}
 	t.newVersion = src.version
@@ -892,7 +893,7 @@ func applySyncTarget(t *syncTarget, src *syncSource) {
 	if t.install {
 		b := src.binaryFor(t.platform)
 		if b == nil {
-			t.fail(fmt.Errorf("no binary was made for %s", t.platform))
+			t.fail(errfmt.Errorf("no binary was made for %s", t.platform))
 			return
 		}
 		if t.newVersion == "" {
@@ -918,7 +919,7 @@ func applySyncTarget(t *syncTarget, src *syncSource) {
 		after, _ := parseVersionLine(f.get("after"))
 		t.res.After = after
 		if after == "" || after != staged {
-			t.fail(fmt.Errorf("the installed binary did not run after the install. It reported %q", f.get("after")))
+			t.fail(errfmt.Errorf("the installed binary did not run after the install. It reported %q", f.get("after")))
 			return
 		}
 		if t.newVersion == "" {
@@ -1012,7 +1013,7 @@ func installError(f syncFacts, stderr string, err error) error {
 		return errors.New("the binary that arrived is not the one that was sent. Nothing was changed")
 	case "run":
 		out := strings.Join(f["out"], " ")
-		return fmt.Errorf("the new binary did not run on the host, so it was not installed. It said: %s", plainLine(out))
+		return errfmt.Errorf("the new binary did not run on the host, so it was not installed. It said: %s", plainLine(out))
 	case "move":
 		return errors.New("the new binary could not be renamed into place. The old one is still there")
 	}

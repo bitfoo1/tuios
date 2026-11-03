@@ -39,6 +39,8 @@ import (
 	"io"
 	"strconv"
 	"sync"
+
+	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 )
 
 // maxMessage bounds one JSON-RPC message. A diff of a large file arrives in one
@@ -185,7 +187,7 @@ func (c *Conn) Call(ctx context.Context, method string, params, out any) error {
 		}
 		if out != nil && len(m.Result) > 0 {
 			if err := json.Unmarshal(m.Result, out); err != nil {
-				return fmt.Errorf("reading the answer to %s: %w", method, err)
+				return errfmt.Errorf("reading the answer to %s: %w", method, err)
 			}
 		}
 		return nil

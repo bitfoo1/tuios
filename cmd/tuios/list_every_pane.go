@@ -10,6 +10,7 @@ import (
 
 	"github.com/charmbracelet/x/ansi"
 
+	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 	"github.com/Gaurav-Gosain/tuios/internal/federation"
 	"github.com/Gaurav-Gosain/tuios/internal/session"
 )
@@ -60,10 +61,10 @@ type listError struct {
 // session limits it to one session when --all is not given.
 func runListAllWindows(sessionName string, all, allHosts bool, text int, jsonOutput bool) error {
 	if text < 0 || text > maxListText {
-		return fmt.Errorf("--text takes a number of lines from 0 to %d", maxListText)
+		return errfmt.Errorf("--text takes a number of lines from 0 to %d", maxListText)
 	}
 	if sessionName != "" && (all || allHosts) {
-		return fmt.Errorf("--session names one session, so it cannot be used with --all or --all-hosts")
+		return errfmt.Errorf("--session names one session, so it cannot be used with --all or --all-hosts")
 	}
 	var panes []listedPane
 	var errs []listError
@@ -186,7 +187,7 @@ func listSessionNames(client *listConn) ([]string, error) {
 		} `json:"sessions"`
 	}
 	if err := json.Unmarshal(raw, &res); err != nil {
-		return nil, fmt.Errorf("failed to parse list-sessions: %w", err)
+		return nil, errfmt.Errorf("failed to parse list-sessions: %w", err)
 	}
 	names := make([]string, 0, len(res.Sessions))
 	for _, s := range res.Sessions {

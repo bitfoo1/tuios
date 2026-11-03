@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 	"github.com/Gaurav-Gosain/tuios/internal/integration"
 	"github.com/Gaurav-Gosain/tuios/internal/session"
 	"github.com/spf13/cobra"
@@ -757,7 +758,7 @@ func resolveHookPane(o agentHookOptions, hio agentHookIO, client verbCaller, sid
 	}
 	raw, err := client.Call("resolve-pane", map[string]any{"sid": sid, "pids": ancestors})
 	if err != nil {
-		return "", "", "", fmt.Errorf("no pane: TUIOS_PANE_ID is unset and %w", err)
+		return "", "", "", errfmt.Errorf("no pane: TUIOS_PANE_ID is unset and %w", err)
 	}
 	var res struct {
 		Session  string `json:"session"`
@@ -835,7 +836,7 @@ func verbParams(client verbCaller, verb string) (map[string]bool, error) {
 func requireIfState(client verbCaller) error {
 	known, err := setAgentStateParams(client)
 	if err != nil {
-		return fmt.Errorf("could not ask the daemon whether it supports --if-state: %w", err)
+		return errfmt.Errorf("could not ask the daemon whether it supports --if-state: %w", err)
 	}
 	if !known["if_state"] {
 		return errors.New("the running daemon predates --if-state, so the report was not sent. It works once the daemon restarts")
@@ -896,7 +897,7 @@ func reportHook(client verbCaller, sess, window, harness string, harnessPID int,
 	if len(extra) > 0 {
 		known, err := setAgentStateParams(client)
 		if err != nil {
-			return hookReportResult{}, nil, fmt.Errorf("could not ask the daemon what set-agent-state takes: %w", err)
+			return hookReportResult{}, nil, errfmt.Errorf("could not ask the daemon what set-agent-state takes: %w", err)
 		}
 		for _, k := range hookFields {
 			if _, ok := extra[k]; !ok {
@@ -935,7 +936,7 @@ func reportHook(client verbCaller, sess, window, harness string, harnessPID int,
 func reportHookSession(client verbCaller, sess, window, harness string, harnessPID int, r integration.Report) (hookReportResult, []string, error) {
 	raw, err := client.Call("list-verbs", map[string]any{"verb": "set-agent-session"})
 	if err != nil {
-		return hookReportResult{}, nil, fmt.Errorf("could not ask the daemon whether it has set-agent-session: %w", err)
+		return hookReportResult{}, nil, errfmt.Errorf("could not ask the daemon whether it has set-agent-session: %w", err)
 	}
 	var verbs struct {
 		Verbs []struct {

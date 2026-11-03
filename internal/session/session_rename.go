@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 	"github.com/Gaurav-Gosain/tuios/internal/lazyre"
 )
 
@@ -185,5 +186,5 @@ func StaleDaemonError(verb string, err error) error {
 	if !verbKnown(verb) {
 		return nil
 	}
-	return fmt.Errorf("the running tuios daemon is older than this tuios and does not know %s. Run 'tuios restart-server'. Saved sessions come back with new shells", verb)
+	return errfmt.Errorf("the running tuios daemon is older than this tuios and does not know %s. Run 'tuios restart-server'. Saved sessions come back with new shells", verb)
 }

@@ -12,6 +12,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 	"github.com/Gaurav-Gosain/tuios/internal/federation"
 )
 
@@ -637,7 +638,7 @@ func (c *fleetConn) call(verb string, params any, budget time.Duration) (json.Ra
 		Error  *verbError      `json:"error"`
 	}
 	if err := json.Unmarshal(line, &resp); err != nil {
-		return nil, fmt.Errorf("the host sent an answer this build cannot read: %w", err)
+		return nil, errfmt.Errorf("the host sent an answer this build cannot read: %w", err)
 	}
 	if resp.Error != nil {
 		return nil, resp.Error
@@ -674,7 +675,7 @@ func (c *fleetConn) listAttention() (fleetListing, error) {
 	}
 	var l fleetListing
 	if err := json.Unmarshal(raw, &l); err != nil {
-		return fleetListing{}, fmt.Errorf("the host sent an Inbox this build cannot read: %w", err)
+		return fleetListing{}, errfmt.Errorf("the host sent an Inbox this build cannot read: %w", err)
 	}
 	if l.BootID == "" {
 		return fleetListing{}, errFleetOld{note: "The tuios on this host cannot resume its event stream, so its agents are polled. Update tuios on the host and restart its daemon."}

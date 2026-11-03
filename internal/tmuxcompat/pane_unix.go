@@ -18,6 +18,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 	"github.com/Gaurav-Gosain/tuios/internal/procinfo"
 	"github.com/Gaurav-Gosain/tuios/internal/shimlink"
 	"golang.org/x/term"
@@ -70,7 +71,7 @@ func lookPathIn(name string, env []string) (string, error) {
 			return p, nil
 		}
 	}
-	return "", fmt.Errorf("%s: command not found", name)
+	return "", errfmt.Errorf("%s: command not found", name)
 }
 
 // start starts one command of the pane on the holder's terminal.
@@ -296,7 +297,7 @@ func acceptRespawns(ln net.Listener, window string, authorize func(int, uint64) 
 				return
 			}
 			if req.Window != window {
-				writeReply(conn, fmt.Errorf("this holder runs window %s, not %s", window, req.Window))
+				writeReply(conn, errfmt.Errorf("this holder runs window %s, not %s", window, req.Window))
 				return
 			}
 			if authorize != nil {

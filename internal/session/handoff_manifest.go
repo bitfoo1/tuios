@@ -7,9 +7,10 @@ import (
 	"encoding/gob"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"sync/atomic"
+
+	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 )
 
 // The handoff manifest: what one daemon image writes down for the image it
@@ -135,7 +136,7 @@ func newManifestWriter(w io.Writer) (*manifestWriter, error) {
 
 func (mw *manifestWriter) record(kind byte, payload []byte) error {
 	if len(payload) > handoffMaxRecord {
-		return fmt.Errorf("a handoff record of %d bytes is over the limit", len(payload))
+		return errfmt.Errorf("a handoff record of %d bytes is over the limit", len(payload))
 	}
 	var hdr [5]byte
 	hdr[0] = kind
@@ -188,15 +189,15 @@ func readHandoffManifest(r io.Reader) (*handoffManifest, error) {
 	for {
 		var hdr [5]byte
 		if _, err := io.ReadFull(br, hdr[:]); err != nil {
-			return nil, fmt.Errorf("the handoff manifest ends early: %w", err)
+			return nil, errfmt.Errorf("the handoff manifest ends early: %w", err)
 		}
 		size := binary.BigEndian.Uint32(hdr[1:])
 		if size > handoffMaxRecord {
-			return nil, fmt.Errorf("a handoff record claims %d bytes", size)
+			return nil, errfmt.Errorf("a handoff record claims %d bytes", size)
 		}
 		payload := make([]byte, size)
 		if _, err := io.ReadFull(br, payload); err != nil {
-			return nil, fmt.Errorf("the handoff manifest ends inside a record: %w", err)
+			return nil, errfmt.Errorf("the handoff manifest ends inside a record: %w", err)
 		}
 		kind := hdr[0]
 		if first != (kind == handoffRecHeader) {
@@ -232,10 +233,10 @@ func readHandoffManifest(r io.Reader) (*handoffManifest, error) {
 			m.Size = read.Load() - int64(br.Buffered())
 			return m, nil
 		default:
-			err = fmt.Errorf("unknown handoff record %q", kind)
+			err = errfmt.Errorf("unknown handoff record %q", kind)
 		}
 		if err != nil {
-			return nil, fmt.Errorf("handoff record %q: %w", kind, err)
+			return nil, errfmt.Errorf("handoff record %q: %w", kind, err)
 		}
 	}
 }
@@ -243,7 +244,7 @@ func readHandoffManifest(r io.Reader) (*handoffManifest, error) {
 // checkHandoffVersion refuses a manifest this build cannot read.
 func checkHandoffVersion(v int) error {
 	if v < MinHandoffVersion || v > HandoffVersion {
-		return fmt.Errorf("the previous daemon wrote handoff v%d, and this tuios reads v%d to v%d, so it cannot take over the panes. %s", v, MinHandoffVersion, HandoffVersion, restartAdvice())
+		return errfmt.Errorf("the previous daemon wrote handoff v%d, and this tuios reads v%d to v%d, so it cannot take over the panes. %s", v, MinHandoffVersion, HandoffVersion, restartAdvice())
 	}
 	return nil
 }

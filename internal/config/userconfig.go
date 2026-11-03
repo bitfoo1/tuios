@@ -15,6 +15,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 	"github.com/Gaurav-Gosain/tuios/internal/overlay"
 	"github.com/Gaurav-Gosain/tuios/internal/sortx"
 	"github.com/Gaurav-Gosain/tuios/internal/theme"
@@ -2265,7 +2266,7 @@ func LoadUserConfig() (*UserConfig, error) {
 	cfg, lc, err := loadConfigFile(configPath)
 	if err != nil {
 		if errors.Is(err, fs.ErrNotExist) {
-			return nil, fmt.Errorf("failed to read config file: %w", err)
+			return nil, errfmt.Errorf("failed to read config file: %w", err)
 		}
 		return nil, err
 	}
@@ -2318,7 +2319,7 @@ func ParseUserConfig(data []byte) (*UserConfig, error) {
 func parseUserConfigOnce(data []byte) (*UserConfig, error) {
 	var cfg UserConfig
 	if err := toml.Unmarshal(data, &cfg); err != nil {
-		return nil, fmt.Errorf("failed to parse config file: %w", err)
+		return nil, errfmt.Errorf("failed to parse config file: %w", err)
 	}
 	// go-toml sets a quoted max_fps straight into the string field, past
 	// UnmarshalText, so the spelling is settled here for both forms.
@@ -2444,7 +2445,7 @@ func seedDefaults(data []byte, parsed *UserConfig) ([]byte, bool) {
 func createDefaultConfig() (*UserConfig, error) {
 	configPath, err := xdg.ConfigFile("tuios/config.toml")
 	if err != nil {
-		return nil, fmt.Errorf("failed to get config path: %w", err)
+		return nil, errfmt.Errorf("failed to get config path: %w", err)
 	}
 	first := FirstRunConfig(configPath, "")
 	if err := writeConfigBytes(first, configPath); err != nil {

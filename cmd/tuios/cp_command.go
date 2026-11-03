@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/Gaurav-Gosain/tuios/internal/config"
+	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 	"github.com/Gaurav-Gosain/tuios/internal/federation"
 	"github.com/Gaurav-Gosain/tuios/internal/session"
 	"github.com/Gaurav-Gosain/tuios/internal/units"
@@ -310,7 +311,7 @@ func parseRate(s string) (int64, error) {
 	}
 	v, err := strconv.ParseFloat(t, 64)
 	if err != nil || v <= 0 {
-		return 0, fmt.Errorf("%q is not a rate such as 500K or 5M", s)
+		return 0, errfmt.Errorf("%q is not a rate such as 500K or 5M", s)
 	}
 	return int64(v * mult), nil
 }

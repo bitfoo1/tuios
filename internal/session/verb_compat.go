@@ -10,6 +10,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 	"github.com/Gaurav-Gosain/tuios/internal/plural"
 )
 
@@ -155,7 +156,7 @@ func (c *VerbClient) handshake(clientVersion string) (*DaemonHandshake, error) {
 	if err == nil {
 		var hs DaemonHandshake
 		if uerr := json.Unmarshal(raw, &hs); uerr != nil {
-			return nil, fmt.Errorf("failed to decode daemon handshake: %w", uerr)
+			return nil, errfmt.Errorf("failed to decode daemon handshake: %w", uerr)
 		}
 		return &hs, nil
 	}
@@ -264,7 +265,7 @@ func probeLegacyDaemon(clientVersion string) (*WelcomePayload, error) {
 	// message that needed them. The payload decodes either way, since gob leaves
 	// a field the sender did not know at its zero value.
 	if resp.Type != MsgWelcome && resp.Type != LegacyWelcomeType {
-		return nil, fmt.Errorf("expected welcome, got message type %d", resp.Type)
+		return nil, errfmt.Errorf("expected welcome, got message type %d", resp.Type)
 	}
 
 	var welcome WelcomePayload

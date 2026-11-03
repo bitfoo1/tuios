@@ -11,6 +11,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 	"github.com/Gaurav-Gosain/tuios/internal/session"
 )
 
@@ -143,7 +144,7 @@ func printAttentionList(w io.Writer, raw json.RawMessage, now time.Time) error {
 		Items []attentionRow `json:"items"`
 	}
 	if err := json.Unmarshal(raw, &res); err != nil {
-		return fmt.Errorf("failed to parse response: %w", err)
+		return errfmt.Errorf("failed to parse response: %w", err)
 	}
 	if len(res.Items) == 0 {
 		fmt.Fprintln(w, "Nothing is waiting for you.")

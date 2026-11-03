@@ -6,7 +6,6 @@ import (
 	"cmp"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"image/color"
 	"io"
 	"os/exec"
@@ -16,6 +15,7 @@ import (
 	"time"
 
 	tea "charm.land/bubbletea/v2"
+	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 	"github.com/Gaurav-Gosain/tuios/internal/overlay"
 	"github.com/Gaurav-Gosain/tuios/internal/release"
 	"github.com/Gaurav-Gosain/tuios/internal/restartplan"
@@ -291,7 +291,7 @@ func runRestartCommand(bin, digest string, gen int, ch chan<- tea.Msg) {
 	}
 	err = cmd.Wait()
 	if err == nil && scanErr != nil {
-		err = fmt.Errorf("read restart-server output: %w", scanErr)
+		err = errfmt.Errorf("read restart-server output: %w", scanErr)
 	}
 	ch <- restartEndMsg{gen: gen, err: err, stderr: stderr.String()}
 }

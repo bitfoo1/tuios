@@ -8,6 +8,7 @@ import (
 	"io"
 
 	"github.com/Gaurav-Gosain/tuios/internal/dnd"
+	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 
 	"log"
 	"maps"
@@ -2922,7 +2923,7 @@ func (s *Session) ClosePTY(id string) error {
 
 	pty, exists := s.ptys[id]
 	if !exists {
-		return fmt.Errorf("PTY %s not found", id)
+		return errfmt.Errorf("PTY %s not found", id)
 	}
 
 	delete(s.ptys, id)
@@ -3305,7 +3306,7 @@ func (s *Session) SetNote(target, note string) (string, error) {
 			return err
 		}
 		if idx < 0 {
-			return fmt.Errorf("no window found matching %q", target)
+			return errfmt.Errorf("no window found matching %q", target)
 		}
 		st.Windows[idx].Note = note
 		id = st.Windows[idx].ID
@@ -4557,7 +4558,7 @@ func (p *PTY) unsubscribe(clientID string, only *ptySubscriber) int64 {
 // that memory. See frame_budget.go.
 func (p *PTY) Write(data []byte) (int, error) {
 	if p.pty == nil {
-		return 0, fmt.Errorf("PTY not available")
+		return 0, errfmt.Errorf("PTY not available")
 	}
 	if len(data) > largeFrame {
 		if err := p.takeLargeSlot(); err != nil {

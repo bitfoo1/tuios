@@ -31,12 +31,13 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"maps"
 	"slices"
 	"sync"
 	"time"
+
+	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 )
 
 // Conn is one connection to the daemon.
@@ -534,7 +535,7 @@ func (s *Server) connect() (Conn, caller, error) {
 		_ = c.Close()
 		var ce *CallError
 		if errors.As(err, &ce) && ce.Code == "unknown_verb" {
-			return nil, caller{}, fmt.Errorf("the tuios daemon is older than this tuios mcp and cannot restrict a connection, so nothing was run. Restart it with tuios kill-server (every pane closes), then retry")
+			return nil, caller{}, errfmt.Errorf("the tuios daemon is older than this tuios mcp and cannot restrict a connection, so nothing was run. Restart it with tuios kill-server (every pane closes), then retry")
 		}
 		return nil, caller{}, err
 	}

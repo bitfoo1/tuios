@@ -9,6 +9,7 @@ import (
 	"strings"
 	"text/tabwriter"
 
+	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 	"github.com/Gaurav-Gosain/tuios/internal/session"
 	"github.com/spf13/cobra"
 )
@@ -136,7 +137,7 @@ func callTask(f taskFlags, window, verb string, params map[string]any, describe 
 	}
 	var row taskRow
 	if err := json.Unmarshal(raw, &row); err != nil {
-		return fmt.Errorf("failed to parse response: %w", err)
+		return errfmt.Errorf("failed to parse response: %w", err)
 	}
 	fmt.Println(describe(row, t.on()))
 	return nil
@@ -157,7 +158,7 @@ standard input. The card starts in todo unless --stage says otherwise.`,
 			if prompt == "-" {
 				b, err := io.ReadAll(io.LimitReader(os.Stdin, 1<<20))
 				if err != nil {
-					return fmt.Errorf("failed to read the prompt: %w", err)
+					return errfmt.Errorf("failed to read the prompt: %w", err)
 				}
 				prompt = string(b)
 			}
@@ -193,7 +194,7 @@ that holds it, its age, and its title. A blocked card is marked with !.`,
 		Args: cobra.NoArgs,
 		RunE: func(_ *cobra.Command, _ []string) error {
 			if allSessions && f.session != "" {
-				return fmt.Errorf("--all-sessions lists every session, so it takes no --session")
+				return errfmt.Errorf("--all-sessions lists every session, so it takes no --session")
 			}
 			return runTaskList(os.Stdout, f, stage, open, allSessions)
 		},
@@ -236,7 +237,7 @@ func runTaskList(w io.Writer, f taskFlags, stage string, open, allSessions bool)
 		Tasks       []taskRow `json:"tasks"`
 	}
 	if err := json.Unmarshal(raw, &res); err != nil {
-		return fmt.Errorf("failed to parse response: %w", err)
+		return errfmt.Errorf("failed to parse response: %w", err)
 	}
 	if res.AllSessions {
 		return printTaskRows(w, "any session"+t.on(), res.Tasks, true)

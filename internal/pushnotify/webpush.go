@@ -17,7 +17,6 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"errors"
-	"fmt"
 	"io"
 	"net"
 	"net/http"
@@ -27,6 +26,8 @@ import (
 	"strings"
 	"syscall"
 	"time"
+
+	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 )
 
 // Web Push: an encrypted message to a push service the phone's operating
@@ -501,7 +502,7 @@ func (c *Client) SendWebPush(ctx context.Context, key *VAPIDKey, p Push, allowIn
 	case code >= 300 && code < 400:
 		return errors.New("the push service answered with a redirect, and a push follows none. Register the phone again")
 	default:
-		return fmt.Errorf("the push service answered %s", statusText(code))
+		return errfmt.Errorf("the push service answered %s", statusText(code))
 	}
 }
 

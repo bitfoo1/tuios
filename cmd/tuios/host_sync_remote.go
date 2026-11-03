@@ -6,7 +6,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"os"
 	"os/exec"
@@ -15,6 +14,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 	"github.com/Gaurav-Gosain/tuios/internal/federation"
 	"github.com/Gaurav-Gosain/tuios/internal/session"
 )
@@ -45,7 +45,7 @@ type sshSyncRunner struct {
 func (r sshSyncRunner) run(ctx context.Context, script string, args []string, stdin io.Reader) (string, string, error) {
 	for _, a := range args {
 		if !federation.SafeRemoteArg(a) {
-			return "", "", fmt.Errorf("the argument %q is not safe to send to the remote shell", a)
+			return "", "", errfmt.Errorf("the argument %q is not safe to send to the remote shell", a)
 		}
 	}
 	cmd := exec.Command(federation.SSHBinary(), federation.SSHArgs(r.host, federation.ShellCommand(script, args...))...)
@@ -227,7 +227,7 @@ func startDaemonWith(ctx context.Context, runner syncRunner, arg, shown string) 
 	case f.has("started"):
 		return nil
 	case f.has("startfail"):
-		return fmt.Errorf("the daemon did not start. Run '%s start-server' on the host to see why", shown)
+		return errfmt.Errorf("the daemon did not start. Run '%s start-server' on the host to see why", shown)
 	}
 	if err == nil {
 		return errors.New("the start of the daemon did not finish")
@@ -290,7 +290,7 @@ func goPlatform(unameS, unameM string) (goos, goarch string, err error) {
 	case "freebsd":
 		goos = "freebsd"
 	default:
-		return "", "", fmt.Errorf("the host runs %q. tuios hosts sync supports Linux, macOS and FreeBSD hosts", unameS)
+		return "", "", errfmt.Errorf("the host runs %q. tuios hosts sync supports Linux, macOS and FreeBSD hosts", unameS)
 	}
 	switch strings.TrimSpace(unameM) {
 	case "x86_64", "amd64":
@@ -302,7 +302,7 @@ func goPlatform(unameS, unameM string) (goos, goarch string, err error) {
 	case "riscv64":
 		goarch = "riscv64"
 	default:
-		return "", "", fmt.Errorf("the host has the architecture %q, which tuios hosts sync does not support", unameM)
+		return "", "", errfmt.Errorf("the host has the architecture %q, which tuios hosts sync does not support", unameM)
 	}
 	return goos, goarch, nil
 }
@@ -360,9 +360,9 @@ func remoteRunError(what, stderr string, err error) error {
 		what += ": it did not answer in time"
 	}
 	if stderr != "" {
-		return fmt.Errorf("%s. ssh reported: %s", what, plainLine(lastLine(stderr)))
+		return errfmt.Errorf("%s. ssh reported: %s", what, plainLine(lastLine(stderr)))
 	}
-	return fmt.Errorf("%s: %v", what, err)
+	return errfmt.Errorf("%s: %v", what, err)
 }
 
 func lastLine(s string) string {

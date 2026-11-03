@@ -14,6 +14,8 @@ import (
 	"path/filepath"
 	"sync"
 	"time"
+
+	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 )
 
 // The tree stream: a folder's small files in one stream.
@@ -112,7 +114,7 @@ func readTreeLine(br *bufio.Reader, v any) error {
 		return err
 	}
 	if err := json.Unmarshal(line, v); err != nil {
-		return fmt.Errorf("a tree stream line did not decode: %w", err)
+		return errfmt.Errorf("a tree stream line did not decode: %w", err)
 	}
 	return nil
 }
@@ -966,7 +968,7 @@ func (m *transferManager) treeCopy(ctx context.Context, j *transferJob, src, dst
 			}
 			task, ok := byRel[hdr.Rel]
 			if !ok || hdr.Size < 0 {
-				return fmt.Errorf("%w: %s sent a file the copy did not ask for", errTreeStream, src.name())
+				return errfmt.Errorf("%w: %s sent a file the copy did not ask for", errTreeStream, src.name())
 			}
 			if hdr.Code != "" {
 				mu.Lock()

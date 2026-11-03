@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 
+	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 	"github.com/spf13/cobra"
 )
 
@@ -46,7 +47,7 @@ func runResumeAgent(sessionName, windowTarget string, dryRun, jsonOutput bool) e
 func printResumeAgent(w io.Writer, raw json.RawMessage) error {
 	var res resumeAgentResult
 	if err := json.Unmarshal(raw, &res); err != nil {
-		return fmt.Errorf("failed to parse response: %w", err)
+		return errfmt.Errorf("failed to parse response: %w", err)
 	}
 	if !res.Typed {
 		fmt.Fprintln(w, res.Command)

@@ -3,12 +3,13 @@ package session
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"os"
 	"path/filepath"
 	"slices"
 	"sync"
 	"time"
+
+	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 )
 
 // Moving a window to another session.
@@ -288,7 +289,7 @@ func (s *Session) adoptWindow(t *paneTransfer, workspace int, focus bool) (Windo
 	var metaAt, subagentsAt int64
 	err := s.mutateState(func(state *SessionState) error {
 		if !state.workspaceAccepts(workspace) || IsScratchWorkspace(workspace) {
-			return fmt.Errorf("workspace %d out of range (1-%d)", workspace, state.workspaceBound())
+			return errfmt.Errorf("workspace %d out of range (1-%d)", workspace, state.workspaceBound())
 		}
 		win = t.win
 		win.Workspace = workspace
@@ -420,7 +421,7 @@ func (d *Daemon) moveWindowToSession(src, dst *Session, windowID string, workspa
 	// Checked before anything leaves the source: a refusal here moves
 	// nothing.
 	if st := dst.GetState(); !st.workspaceAccepts(workspace) || IsScratchWorkspace(workspace) {
-		return WindowState{}, fmt.Errorf("workspace %d out of range (1-%d)", workspace, st.workspaceBound())
+		return WindowState{}, errfmt.Errorf("workspace %d out of range (1-%d)", workspace, st.workspaceBound())
 	}
 
 	srcLabel, dstLabel := sessionLabel(src), sessionLabel(dst)

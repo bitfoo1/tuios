@@ -2,13 +2,13 @@ package theme
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 	"unicode"
 
 	"github.com/Gaurav-Gosain/tuios/internal/atomicfile"
+	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 )
 
 // A look (see config.ParseLook) may carry a theme and a glyph set. A stranger
@@ -27,10 +27,10 @@ const MaxLookAssetBytes = 32 << 10
 // write under id.
 func CheckLookTheme(id string, data []byte) ([]byte, error) {
 	if len(data) > MaxLookAssetBytes {
-		return nil, fmt.Errorf("the theme is larger than %d KiB", MaxLookAssetBytes>>10)
+		return nil, errfmt.Errorf("the theme is larger than %d KiB", MaxLookAssetBytes>>10)
 	}
 	if !ValidThemeID(id) {
-		return nil, fmt.Errorf("theme name %q cannot be a file name. Use a-z, 0-9, '-', '_' and '.'", id)
+		return nil, errfmt.Errorf("theme name %q cannot be a file name. Use a-z, 0-9, '-', '_' and '.'", id)
 	}
 	f, err := readThemeFile(id+".json", data)
 	if err != nil {
@@ -38,7 +38,7 @@ func CheckLookTheme(id string, data []byte) ([]byte, error) {
 	}
 	f.ID = id
 	if hasControl(f.DisplayName) || hasControl(f.Base) {
-		return nil, fmt.Errorf("the theme has a control character in its name")
+		return nil, errfmt.Errorf("the theme has a control character in its name")
 	}
 	// A role is a colour, or a group of colours such as border.unfocused.
 	for k, v := range f.Chrome {
@@ -53,7 +53,7 @@ func CheckLookTheme(id string, data []byte) ([]byte, error) {
 				if field != "" {
 					name += "." + field
 				}
-				return nil, fmt.Errorf("theme chrome %s must be a colour", name)
+				return nil, errfmt.Errorf("theme chrome %s must be a colour", name)
 			}
 		}
 	}
@@ -80,14 +80,14 @@ func CheckLookTheme(id string, data []byte) ([]byte, error) {
 // file to write under id, with one line for each glyph it drops.
 func CheckLookGlyphs(id string, data []byte) ([]byte, []string, error) {
 	if len(data) > MaxLookAssetBytes {
-		return nil, nil, fmt.Errorf("the glyph set is larger than %d KiB", MaxLookAssetBytes>>10)
+		return nil, nil, errfmt.Errorf("the glyph set is larger than %d KiB", MaxLookAssetBytes>>10)
 	}
 	if !ValidThemeID(id) {
-		return nil, nil, fmt.Errorf("glyph set name %q cannot be a file name. Use a-z, 0-9, '-', '_' and '.'", id)
+		return nil, nil, errfmt.Errorf("glyph set name %q cannot be a file name. Use a-z, 0-9, '-', '_' and '.'", id)
 	}
 	var set GlyphSet
 	if err := json.Unmarshal(data, &set); err != nil {
-		return nil, nil, fmt.Errorf("failed to parse glyph set: %w", err)
+		return nil, nil, errfmt.Errorf("failed to parse glyph set: %w", err)
 	}
 	set.ID = id
 	if set.DisplayName == "" {
@@ -102,7 +102,7 @@ func CheckLookGlyphs(id string, data []byte) ([]byte, []string, error) {
 	}
 	for _, p := range fields {
 		if hasControl(*p) {
-			return nil, nil, fmt.Errorf("the glyph set has a control character in %q", *p)
+			return nil, nil, errfmt.Errorf("the glyph set has a control character in %q", *p)
 		}
 	}
 	problems := sanitizeGlyphSet(&set)
@@ -115,7 +115,7 @@ func CheckLookGlyphs(id string, data []byte) ([]byte, []string, error) {
 // the file in one step and never follows a link at the file's name.
 func WriteLookAsset(glyphs bool, id string, data []byte) (string, error) {
 	if !ValidThemeID(id) {
-		return "", fmt.Errorf("%q cannot be a file name", id)
+		return "", errfmt.Errorf("%q cannot be a file name", id)
 	}
 	dir, err := lookAssetDir(glyphs)
 	if err != nil {
@@ -126,7 +126,7 @@ func WriteLookAsset(glyphs bool, id string, data []byte) (string, error) {
 	}
 	path := filepath.Join(dir, id+".json")
 	if err := atomicfile.Write(path, data, 0o600, false); err != nil {
-		return "", fmt.Errorf("write %s: %w", path, err)
+		return "", errfmt.Errorf("write %s: %w", path, err)
 	}
 	return path, nil
 }
@@ -135,7 +135,7 @@ func WriteLookAsset(glyphs bool, id string, data []byte) (string, error) {
 // that is not there is not an error.
 func RemoveLookAsset(glyphs bool, id string) error {
 	if !ValidThemeID(id) {
-		return fmt.Errorf("%q cannot be a file name", id)
+		return errfmt.Errorf("%q cannot be a file name", id)
 	}
 	dir, err := lookAssetDir(glyphs)
 	if err != nil {

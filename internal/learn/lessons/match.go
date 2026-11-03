@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+
+	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 )
 
 // Event is one event from internal/learn, in the shape a rule reads: the
@@ -106,7 +108,7 @@ func (a *ActionRef) UnmarshalJSON(b []byte) error {
 		Prefix string `json:"prefix"`
 	}
 	if err := json.Unmarshal(b, &p); err != nil || p.Prefix == "" {
-		return fmt.Errorf(`a via entry is an action name or {"prefix": ...}`)
+		return errfmt.Errorf(`a via entry is an action name or {"prefix": ...}`)
 	}
 	a.Prefix = p.Prefix
 	return nil
@@ -151,7 +153,7 @@ func (r *Rule) compile() error { return r.compileAt("r") }
 
 func (r *Rule) compileAt(slot string) error {
 	if r == nil {
-		return fmt.Errorf("empty rule")
+		return errfmt.Errorf("empty rule")
 	}
 	r.slot = slot
 	n := 0
@@ -165,19 +167,19 @@ func (r *Rule) compileAt(slot string) error {
 		}
 	}
 	if n != 1 {
-		return fmt.Errorf("a rule sets %d kinds, want exactly 1", n)
+		return errfmt.Errorf("a rule sets %d kinds, want exactly 1", n)
 	}
 	if r.Where != nil && r.On == "" {
-		return fmt.Errorf("where goes with on")
+		return errfmt.Errorf("where goes with on")
 	}
 	if (r.Via != nil) != (r.Then != nil) {
-		return fmt.Errorf("via needs then")
+		return errfmt.Errorf("via needs then")
 	}
 	if (r.Times > 0) != (r.Of != nil) {
-		return fmt.Errorf("times needs of")
+		return errfmt.Errorf("times needs of")
 	}
 	if r.To != nil && r.Changed == "" {
-		return fmt.Errorf("to goes with changed")
+		return errfmt.Errorf("to goes with changed")
 	}
 	for _, p := range []string{r.RanLine, r.Notified} {
 		if p == "" {
@@ -185,7 +187,7 @@ func (r *Rule) compileAt(slot string) error {
 		}
 		re, err := regexp.Compile(p)
 		if err != nil {
-			return fmt.Errorf("pattern %q: %w", p, err)
+			return errfmt.Errorf("pattern %q: %w", p, err)
 		}
 		r.re = re
 	}
@@ -225,7 +227,7 @@ func compileOps(path string, m map[string]any) (*valueOps, error) {
 		switch k {
 		case "prefix", "suffix", "match", "differs":
 			if !isStr {
-				return nil, fmt.Errorf("where %s: %s wants a string", path, k)
+				return nil, errfmt.Errorf("where %s: %s wants a string", path, k)
 			}
 		}
 		switch k {
@@ -236,7 +238,7 @@ func compileOps(path string, m map[string]any) (*valueOps, error) {
 		case "match":
 			re, err := regexp.Compile(s)
 			if err != nil {
-				return nil, fmt.Errorf("where %s: pattern %q: %w", path, s, err)
+				return nil, errfmt.Errorf("where %s: pattern %q: %w", path, s, err)
 			}
 			ops.match = re
 		case "differs":
@@ -247,17 +249,17 @@ func compileOps(path string, m map[string]any) (*valueOps, error) {
 		case "truthy":
 			b, ok := v.(bool)
 			if !ok {
-				return nil, fmt.Errorf("where %s: truthy wants true or false", path)
+				return nil, errfmt.Errorf("where %s: truthy wants true or false", path)
 			}
 			ops.truthy = &b
 		case "not":
 			ops.not, ops.hasNot = v, true
 		default:
-			return nil, fmt.Errorf("where %s: unknown check %q", path, k)
+			return nil, errfmt.Errorf("where %s: unknown check %q", path, k)
 		}
 	}
 	if len(m) == 0 {
-		return nil, fmt.Errorf("where %s: an empty check", path)
+		return nil, errfmt.Errorf("where %s: an empty check", path)
 	}
 	return ops, nil
 }
@@ -269,7 +271,7 @@ func checkPath(path string) error {
 	}
 	root, rest, _ := strings.Cut(path, ".")
 	if (root != "data" && root != "state") || rest == "" {
-		return fmt.Errorf("path %q: want data.x, state.x or window(data.x).y", path)
+		return errfmt.Errorf("path %q: want data.x, state.x or window(data.x).y", path)
 	}
 	return nil
 }

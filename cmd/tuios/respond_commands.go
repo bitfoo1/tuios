@@ -10,6 +10,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 	"github.com/Gaurav-Gosain/tuios/internal/harness"
 	"github.com/Gaurav-Gosain/tuios/internal/session"
 )
@@ -60,7 +61,7 @@ func runPeekPrompt(sessionName, windowTarget string, jsonOutput bool) error {
 func printPromptPeek(w io.Writer, raw json.RawMessage) error {
 	var p promptPeek
 	if err := json.Unmarshal(raw, &p); err != nil {
-		return fmt.Errorf("failed to parse response: %w", err)
+		return errfmt.Errorf("failed to parse response: %w", err)
 	}
 	who := orNone(plainLine(p.Name)) + " (" + shortWindowID(p.Window) + ")"
 	if p.Host != "" {
@@ -145,7 +146,7 @@ func runRespond(sessionName, windowTarget, action, value, promptID string, timeo
 		State     string `json:"state"`
 	}
 	if err := json.Unmarshal(raw, &res); err != nil {
-		return fmt.Errorf("failed to parse response: %w", err)
+		return errfmt.Errorf("failed to parse response: %w", err)
 	}
 	fmt.Printf("sent %s; the pane now reports %s", plainLine(res.Sent), res.State)
 	switch res.SettledBy {

@@ -3,10 +3,11 @@ package agentproto
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"strings"
 	"sync"
+
+	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 )
 
 // The ACP client, protocol version 1.
@@ -81,10 +82,10 @@ func (a *ACP) Start(ctx context.Context, cwd string) (Info, error) {
 		"clientInfo": map[string]string{"name": "tuios", "title": "tuios", "version": a.version},
 	}, &init)
 	if err != nil {
-		return Info{}, fmt.Errorf("initialize: %w", err)
+		return Info{}, errfmt.Errorf("initialize: %w", err)
 	}
 	if init.ProtocolVersion != acpProtocolVersion {
-		return Info{}, fmt.Errorf("the agent speaks ACP version %d, and tuios speaks version %d", init.ProtocolVersion, acpProtocolVersion)
+		return Info{}, errfmt.Errorf("the agent speaks ACP version %d, and tuios speaks version %d", init.ProtocolVersion, acpProtocolVersion)
 	}
 	var info Info
 	if ai := init.AgentInfo; ai != nil {
@@ -104,12 +105,12 @@ func (a *ACP) Start(ctx context.Context, cwd string) (Info, error) {
 			for _, m := range init.AuthMethods {
 				names = append(names, firstOf(m.Name, m.ID))
 			}
-			return info, fmt.Errorf("session/new: %w. The agent may need a login (%s): log in by running it in a shell, then start it here again", err, strings.Join(names, ", "))
+			return info, errfmt.Errorf("session/new: %w. The agent may need a login (%s): log in by running it in a shell, then start it here again", err, strings.Join(names, ", "))
 		}
-		return info, fmt.Errorf("session/new: %w", err)
+		return info, errfmt.Errorf("session/new: %w", err)
 	}
 	if created.SessionID == "" {
-		return info, fmt.Errorf("session/new: the agent returned no sessionId")
+		return info, errfmt.Errorf("session/new: the agent returned no sessionId")
 	}
 	a.mu.Lock()
 	a.session = created.SessionID

@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 	"github.com/Gaurav-Gosain/tuios/internal/federation"
 	"github.com/spf13/cobra"
 )
@@ -54,11 +55,11 @@ directory its windows start in.`,
 		ValidArgsFunction: completeSessionNames,
 		RunE: func(_ *cobra.Command, args []string) error {
 			if cwd != "" && !create {
-				return fmt.Errorf("--cwd sets the directory of a session --create makes. Add --create")
+				return errfmt.Errorf("--cwd sets the directory of a session --create makes. Add --create")
 			}
 			target := federation.ParseSessionTarget(args[0])
 			if target.Session == "" {
-				return fmt.Errorf("name the session to switch to")
+				return errfmt.Errorf("name the session to switch to")
 			}
 			host := target.Host
 			if host == federation.LocalHostName {
@@ -113,7 +114,7 @@ func runSwitchSession(name, host, fromSession, clientID string, create bool, cwd
 	if jsonOut {
 		var pretty any
 		if err := json.Unmarshal(raw, &pretty); err != nil {
-			return fmt.Errorf("failed to parse response: %w", err)
+			return errfmt.Errorf("failed to parse response: %w", err)
 		}
 		out, err := json.MarshalIndent(pretty, "", "  ")
 		if err != nil {
@@ -129,7 +130,7 @@ func runSwitchSession(name, host, fromSession, clientID string, create bool, cwd
 		Already bool   `json:"already"`
 	}
 	if err := json.Unmarshal(raw, &res); err != nil {
-		return fmt.Errorf("failed to parse response: %w", err)
+		return errfmt.Errorf("failed to parse response: %w", err)
 	}
 	where := res.Session
 	if res.Host != "" {
@@ -152,14 +153,14 @@ func runSwitchSession(name, host, fromSession, clientID string, create bool, cwd
 func checkSessionDir(dir string) (string, error) {
 	abs, err := filepath.Abs(dir)
 	if err != nil {
-		return "", fmt.Errorf("--cwd %s: %w", dir, err)
+		return "", errfmt.Errorf("--cwd %s: %w", dir, err)
 	}
 	info, err := os.Stat(abs)
 	if err != nil {
-		return "", fmt.Errorf("--cwd %s: the directory does not exist", dir)
+		return "", errfmt.Errorf("--cwd %s: the directory does not exist", dir)
 	}
 	if !info.IsDir() {
-		return "", fmt.Errorf("--cwd %s: this is not a directory", dir)
+		return "", errfmt.Errorf("--cwd %s: this is not a directory", dir)
 	}
 	return abs, nil
 }

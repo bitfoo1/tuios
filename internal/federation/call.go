@@ -5,9 +5,10 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"sync"
+
+	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 )
 
 // The control stream speaks the daemon's own line-delimited JSON verb protocol.
@@ -87,7 +88,7 @@ func (c *caller) call(ctx context.Context, verb string, params any) (json.RawMes
 	}
 	line, err := json.Marshal(req)
 	if err != nil {
-		return nil, fmt.Errorf("encode request: %w", err)
+		return nil, errfmt.Errorf("encode request: %w", err)
 	}
 	line = append(line, '\n')
 
@@ -127,7 +128,7 @@ func (c *caller) readResponse() (json.RawMessage, error) {
 		Error  *RemoteError    `json:"error"`
 	}
 	if err := json.Unmarshal(line, &resp); err != nil {
-		return nil, fmt.Errorf("decode response: %w", err)
+		return nil, errfmt.Errorf("decode response: %w", err)
 	}
 	if resp.Error != nil {
 		return nil, resp.Error

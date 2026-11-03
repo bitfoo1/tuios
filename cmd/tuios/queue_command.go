@@ -9,6 +9,7 @@ import (
 	"strings"
 	"text/tabwriter"
 
+	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 	"github.com/spf13/cobra"
 )
 
@@ -149,7 +150,7 @@ func runQueuePrompt(sessionName, window, text string, jsonOutput bool) error {
 		Delivering bool   `json:"delivering"`
 	}
 	if err := json.Unmarshal(raw, &res); err != nil {
-		return fmt.Errorf("failed to parse response: %w", err)
+		return errfmt.Errorf("failed to parse response: %w", err)
 	}
 	fmt.Println(describeQueued(res.ID, window, res.Position, res.Delivering) + t.on())
 	return nil
@@ -205,7 +206,7 @@ func runQueueList(w io.Writer, sessionName, window string, jsonOutput bool) erro
 		Entries []queueRow `json:"entries"`
 	}
 	if err := json.Unmarshal(raw, &res); err != nil {
-		return fmt.Errorf("failed to parse response: %w", err)
+		return errfmt.Errorf("failed to parse response: %w", err)
 	}
 	return printQueueRows(w, res.Session+t.on(), res.Entries)
 }
@@ -260,7 +261,7 @@ func runQueueRemove(sessionName, window, id string, all, jsonOutput bool) error 
 		Queued    int      `json:"queued"`
 	}
 	if err := json.Unmarshal(raw, &res); err != nil {
-		return fmt.Errorf("failed to parse response: %w", err)
+		return errfmt.Errorf("failed to parse response: %w", err)
 	}
 	switch len(res.Cancelled) {
 	case 0:

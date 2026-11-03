@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 	"github.com/spf13/cobra"
 )
 
@@ -44,7 +45,7 @@ From a pane, this command needs the admin grant.`,
 		Args: cobra.NoArgs,
 		RunE: func(_ *cobra.Command, _ []string) error {
 			if clientID != "" && fromSession != "" {
-				return fmt.Errorf("give --client or --session, not both")
+				return errfmt.Errorf("give --client or --session, not both")
 			}
 			return runDetachClient(clientID, fromSession, allOther, jsonOut)
 		},
@@ -82,7 +83,7 @@ func runDetachClient(clientID, fromSession string, allOther, jsonOut bool) error
 		Detached []string `json:"detached"`
 	}
 	if err := json.Unmarshal(raw, &res); err != nil {
-		return fmt.Errorf("failed to parse response: %w", err)
+		return errfmt.Errorf("failed to parse response: %w", err)
 	}
 	if jsonOut {
 		return printJSON(res)

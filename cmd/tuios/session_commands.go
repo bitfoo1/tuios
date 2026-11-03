@@ -15,6 +15,7 @@ import (
 	"charm.land/lipgloss/v2/table"
 	"github.com/Gaurav-Gosain/tuios/internal/app"
 	"github.com/Gaurav-Gosain/tuios/internal/config"
+	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 	"github.com/Gaurav-Gosain/tuios/internal/hooks"
 	"github.com/Gaurav-Gosain/tuios/internal/input"
 	"github.com/Gaurav-Gosain/tuios/internal/plural"
@@ -289,7 +290,7 @@ func newSessionDetached(sessionName string, global bool) error {
 	if sessionName == "" {
 		sessions, err := client.ListSessions()
 		if err != nil {
-			return fmt.Errorf("failed to list sessions: %w", err)
+			return errfmt.Errorf("failed to list sessions: %w", err)
 		}
 		existing := make([]string, len(sessions))
 		for i, s := range sessions {
@@ -377,7 +378,7 @@ func runNewSessionInSpace(sessionName, space string, detach bool) error {
 		Session string `json:"session"`
 	}
 	if err := json.Unmarshal(raw, &res); err != nil || res.Session == "" {
-		return fmt.Errorf("failed to parse the new session's name: %v: %s", err, raw)
+		return errfmt.Errorf("failed to parse the new session's name: %v: %s", err, raw)
 	}
 
 	if detach {
@@ -634,7 +635,7 @@ func runDaemonSessionOn(host, sessionName string, createNew bool) error {
 	finish()
 
 	if err != nil {
-		return fmt.Errorf("program error: %w", err)
+		return errfmt.Errorf("program error: %w", err)
 	}
 
 	// A restart from the app: the new daemon answers, and the client comes
@@ -760,7 +761,7 @@ func runListClients(jsonOutput bool) error {
 		Clients []session.ClientInfo `json:"clients"`
 	}
 	if err := json.Unmarshal(raw, &listed); err != nil {
-		return fmt.Errorf("failed to parse clients: %w", err)
+		return errfmt.Errorf("failed to parse clients: %w", err)
 	}
 	if jsonOutput {
 		return printJSON(listed.Clients)
@@ -809,7 +810,7 @@ func runListSessions(jsonOutput bool) error {
 		Sessions []session.SessionInfo `json:"sessions"`
 	}
 	if err := json.Unmarshal(raw, &listed); err != nil {
-		return fmt.Errorf("failed to parse sessions: %w", err)
+		return errfmt.Errorf("failed to parse sessions: %w", err)
 	}
 	sessions := listed.Sessions
 
@@ -1234,9 +1235,9 @@ func runDaemon(foreground, disableAutoRestore bool) error {
 	if session.IsDaemonRunning() {
 		pid := session.GetDaemonPID()
 		if pid > 0 {
-			return fmt.Errorf("a daemon is already running (PID %d). Stop it with 'tuios kill-server' first, or use it as it is", pid)
+			return errfmt.Errorf("a daemon is already running (PID %d). Stop it with 'tuios kill-server' first, or use it as it is", pid)
 		}
-		return fmt.Errorf("a daemon is already running. Stop it with 'tuios kill-server' first, or use it as it is")
+		return errfmt.Errorf("a daemon is already running. Stop it with 'tuios kill-server' first, or use it as it is")
 	}
 
 	if !foreground {

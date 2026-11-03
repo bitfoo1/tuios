@@ -3,10 +3,10 @@ package guibridge
 import (
 	"encoding/binary"
 	"encoding/json"
-	"fmt"
 	"strconv"
 	"strings"
 
+	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 	"github.com/Gaurav-Gosain/tuios/internal/session"
 )
 
@@ -137,7 +137,7 @@ func ParseResume(v string) (map[string]int64, error) {
 		id, seq, ok := strings.Cut(part, "=")
 		n, err := strconv.ParseInt(seq, 10, 64)
 		if !ok || id == "" || err != nil || n < 0 {
-			return nil, fmt.Errorf("bad --resume entry %q, want pty=seq", part)
+			return nil, errfmt.Errorf("bad --resume entry %q, want pty=seq", part)
 		}
 		out[id] = n
 	}

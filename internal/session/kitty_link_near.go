@@ -8,13 +8,13 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"os"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 	"github.com/Gaurav-Gosain/tuios/internal/federation"
 )
 
@@ -331,7 +331,7 @@ func (p *remotePane) fetchKittyMedium(token, id string) (io.ReadCloser, int64, e
 	}
 	if err != nil {
 		_ = stream.Close()
-		return nil, 0, fmt.Errorf("pane-kitty-medium: %w", err)
+		return nil, 0, errfmt.Errorf("pane-kitty-medium: %w", err)
 	}
 	kittyLinkStallForTest(resp.Result.Size)
 	var r io.Reader = br

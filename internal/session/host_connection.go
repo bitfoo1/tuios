@@ -4,10 +4,11 @@ import (
 	"bufio"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"net"
 	"time"
+
+	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 )
 
 // The client half of open-host-connection: what a client does to a fresh
@@ -68,7 +69,7 @@ func openHostConnectionAgent(conn net.Conn, br *bufio.Reader, host, agent string
 	}
 	_ = conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
 	if _, err := conn.Write(append(req, '\n')); err != nil {
-		return HostConnectionInfo{}, fmt.Errorf("cannot ask the daemon for a connection to %s: %w", host, err)
+		return HostConnectionInfo{}, errfmt.Errorf("cannot ask the daemon for a connection to %s: %w", host, err)
 	}
 	// The daemon waits for the host's first attempt to settle before it
 	// answers, which is bounded by its own budget. This is that budget plus
@@ -87,14 +88,14 @@ func openHostConnectionAgent(conn net.Conn, br *bufio.Reader, host, agent string
 				Message: "The daemon on this machine is too old to open a connection to " + host + ". Restart it with 'tuios kill-server'.",
 			}
 		}
-		return HostConnectionInfo{}, fmt.Errorf("no answer from the daemon on this machine about %s: %w", host, err)
+		return HostConnectionInfo{}, errfmt.Errorf("no answer from the daemon on this machine about %s: %w", host, err)
 	}
 	var resp struct {
 		Result *HostConnectionInfo `json:"result"`
 		Error  *verbError          `json:"error"`
 	}
 	if err := json.Unmarshal(line, &resp); err != nil {
-		return HostConnectionInfo{}, fmt.Errorf("the daemon on this machine sent a reply this build cannot read: %w", err)
+		return HostConnectionInfo{}, errfmt.Errorf("the daemon on this machine sent a reply this build cannot read: %w", err)
 	}
 	if resp.Error != nil {
 		// A daemon from before ssh_agent follow refuses the parameter it does
@@ -110,7 +111,7 @@ func openHostConnectionAgent(conn net.Conn, br *bufio.Reader, host, agent string
 		return HostConnectionInfo{}, e
 	}
 	if resp.Result == nil {
-		return HostConnectionInfo{}, fmt.Errorf("the daemon on this machine answered with no result for %s", host)
+		return HostConnectionInfo{}, errfmt.Errorf("the daemon on this machine answered with no result for %s", host)
 	}
 	return *resp.Result, nil
 }

@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/Gaurav-Gosain/tuios/internal/childproc"
+	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 	"github.com/Gaurav-Gosain/tuios/internal/release"
 )
 
@@ -45,12 +46,12 @@ func (s *syncSource) loadBinary(p string) error {
 	}
 	goos, goarch, err := binaryPlatform(data)
 	if err != nil {
-		return fmt.Errorf("%s: %w", p, err)
+		return errfmt.Errorf("%s: %w", p, err)
 	}
 	// The module path is in every Go binary built from the tuios main
 	// package, stripped or not.
 	if !bytes.Contains(data, []byte("github.com/"+release.Repo+"/cmd/tuios")) {
-		return fmt.Errorf("%s is not a tuios binary", p)
+		return errfmt.Errorf("%s is not a tuios binary", p)
 	}
 	s.platform = goos + "/" + goarch
 	// The version is read by running it, which only works for this
@@ -60,7 +61,7 @@ func (s *syncSource) loadBinary(p string) error {
 		defer cancel()
 		out, err := exec.CommandContext(ctx, abs, "--version").Output()
 		if err != nil {
-			return fmt.Errorf("%s did not run: %w", p, err)
+			return errfmt.Errorf("%s did not run: %w", p, err)
 		}
 		line, _, _ := strings.Cut(string(out), "\n")
 		s.version, _ = parseVersionLine(line)
@@ -83,7 +84,7 @@ func (s *syncSource) initDev(dir string) error {
 	}
 	rev, err := git("rev-parse", "HEAD")
 	if err != nil {
-		return fmt.Errorf("could not read the commit of %s: %w", dir, err)
+		return errfmt.Errorf("could not read the commit of %s: %w", dir, err)
 	}
 	rev = strings.TrimSpace(rev)
 	s.commit = rev
@@ -93,7 +94,7 @@ func (s *syncSource) initDev(dir string) error {
 	}
 	status, err := git("status", "--porcelain")
 	if err != nil {
-		return fmt.Errorf("could not read the state of %s: %w", dir, err)
+		return errfmt.Errorf("could not read the state of %s: %w", dir, err)
 	}
 	if strings.TrimSpace(status) == "" {
 		return nil
@@ -101,7 +102,7 @@ func (s *syncSource) initDev(dir string) error {
 	h := sha256.New()
 	diff, err := git("diff", "HEAD", "--binary")
 	if err != nil {
-		return fmt.Errorf("could not read the changes in %s: %w", dir, err)
+		return errfmt.Errorf("could not read the changes in %s: %w", dir, err)
 	}
 	_, _ = io.WriteString(h, diff)
 	untracked, _ := git("ls-files", "--others", "--exclude-standard", "-z")
@@ -138,7 +139,7 @@ func (s *syncSource) buildDev(platform string) (*syncBinary, error) {
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
 	if err := cmd.Run(); err != nil {
-		return nil, fmt.Errorf("the build for %s failed: %v: %s", platform, err, lastLine(stderr.String()))
+		return nil, errfmt.Errorf("the build for %s failed: %v: %s", platform, err, lastLine(stderr.String()))
 	}
 	data, err := os.ReadFile(out)
 	if err != nil {
@@ -180,11 +181,11 @@ func (s *syncSource) fetchRelease(platform string) (*syncBinary, error) {
 	goos, goarch, _ := strings.Cut(platform, "/")
 	name, err := release.AssetName("tuios", s.rel.Tag, goos, goarch)
 	if err != nil {
-		return nil, fmt.Errorf("no release archive fits %s: %w", platform, err)
+		return nil, errfmt.Errorf("no release archive fits %s: %w", platform, err)
 	}
 	asset, ok := s.rel.AssetNamed(name)
 	if !ok {
-		return nil, fmt.Errorf("%s publishes no %s", s.rel.Tag, name)
+		return nil, errfmt.Errorf("%s publishes no %s", s.rel.Tag, name)
 	}
 	fmt.Fprintf(s.errOut, "Downloading %s...\n", name)
 	ctx, cancel := context.WithTimeout(context.Background(), networkTimeout)
@@ -198,7 +199,7 @@ func (s *syncSource) fetchRelease(platform string) (*syncBinary, error) {
 	}
 	data, err := release.BinaryFromArchive(bytes.NewReader(archive), "tuios")
 	if err != nil {
-		return nil, fmt.Errorf("%s did not hold tuios: %w", name, err)
+		return nil, errfmt.Errorf("%s did not hold tuios: %w", name, err)
 	}
 	return newSyncBinary(data, s.version), nil
 }

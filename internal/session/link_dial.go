@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net"
 	"os"
 	"time"
 
+	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 	"github.com/Gaurav-Gosain/tuios/internal/federation"
 )
 
@@ -134,7 +134,7 @@ func linkHandshake(conn net.Conn, peer string, pinned bool, agent string) (*verb
 		Error *verbError `json:"error"`
 	}
 	if err := json.Unmarshal(line, &resp); err != nil {
-		return nil, fmt.Errorf("the daemon's answer to link-peer cannot be read: %w", err)
+		return nil, errfmt.Errorf("the daemon's answer to link-peer cannot be read: %w", err)
 	}
 	return resp.Error, nil
 }
@@ -197,7 +197,7 @@ func daemonHoldsLinkPolicy(socketPath string) bool {
 // --as flag.
 func ValidLinkPeerName(name string) error {
 	if name == "" || len(name) > 64 || !linkPeerPattern().MatchString(name) {
-		return fmt.Errorf("%q is not a machine name: use letters, digits, dot, dash and underscore", name)
+		return errfmt.Errorf("%q is not a machine name: use letters, digits, dot, dash and underscore", name)
 	}
 	return nil
 }

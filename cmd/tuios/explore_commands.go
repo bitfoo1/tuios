@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/Gaurav-Gosain/tuios/internal/config"
+	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 	"github.com/Gaurav-Gosain/tuios/internal/explore"
 	"github.com/Gaurav-Gosain/tuios/internal/sortx"
 	"github.com/spf13/cobra"
@@ -137,7 +138,7 @@ Type tuios help [path to command] for full details.
 				return
 			}
 			if target == nil || err != nil {
-				cobra.CheckErr(fmt.Errorf("no command %q. Run tuios help to list the commands", strings.Join(args, " ")))
+				cobra.CheckErr(errfmt.Errorf("no command %q. Run tuios help to list the commands", strings.Join(args, " ")))
 				return
 			}
 			docs := commandDocs(target)
@@ -257,7 +258,7 @@ func loadConfigOptions(sessionName string) ([]configOption, error) {
 		Options []optionRow `json:"options"`
 	}
 	if err := json.Unmarshal(raw, &res); err != nil {
-		return nil, fmt.Errorf("failed to parse the option list: %w", err)
+		return nil, errfmt.Errorf("failed to parse the option list: %w", err)
 	}
 	out := make([]configOption, 0, len(res.Options))
 	for _, o := range res.Options {

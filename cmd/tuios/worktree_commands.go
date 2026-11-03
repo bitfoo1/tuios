@@ -11,6 +11,7 @@ import (
 
 	"charm.land/lipgloss/v2"
 	"charm.land/lipgloss/v2/table"
+	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 	"github.com/Gaurav-Gosain/tuios/internal/ghpr"
 	"github.com/Gaurav-Gosain/tuios/internal/harness"
 	"github.com/Gaurav-Gosain/tuios/internal/plural"
@@ -337,16 +338,16 @@ pull HOST:SESSION' brings its work here.`,
 			count, prompt := 0, ""
 			switch {
 			case len(fanPrompts) > 0 && len(args) == 2:
-				return fmt.Errorf("--prompt gives each session its own prompt, so the command takes no prompt argument")
+				return errfmt.Errorf("--prompt gives each session its own prompt, so the command takes no prompt argument")
 			case len(fanPrompts) == 0 && len(args) != 2:
-				return fmt.Errorf("fan takes a count and a prompt, or --prompt once per session")
+				return errfmt.Errorf("fan takes a count and a prompt, or --prompt once per session")
 			case len(args) == 2:
 				prompt = args[1]
 			}
 			if len(args) > 0 {
 				n, err := strconv.Atoi(args[0])
 				if err != nil {
-					return fmt.Errorf("count must be a number, got %q", args[0])
+					return errfmt.Errorf("count must be a number, got %q", args[0])
 				}
 				count = n
 			}
@@ -355,7 +356,7 @@ pull HOST:SESSION' brings its work here.`,
 				return err
 			}
 			if fanTask != "" && fanHost != "" && fanHost != "local" {
-				return fmt.Errorf("--task names a card of a session on this machine, and --host runs the fan on %s. Leave --task out, or run the fan here", fanHost)
+				return errfmt.Errorf("--task names a card of a session on this machine, and --host runs the fan on %s. Leave --task out, or run the fan here", fanHost)
 			}
 			return runFan(fanOptions{
 				host: fanHost, count: count, agents: fanAgents, prompt: prompt, prompts: fanPrompts, env: env,
@@ -502,7 +503,7 @@ func runWorktreeNew(branch, repo, base, name, agent, host string, clone, detach,
 		HookError     string `json:"hook_error"`
 	}
 	if err := json.Unmarshal(raw, &res); err != nil {
-		return fmt.Errorf("failed to parse response: %w", err)
+		return errfmt.Errorf("failed to parse response: %w", err)
 	}
 	if res.Cloned {
 		fmt.Printf("Cloned the repository to %s%s.\n", res.RepoRoot, t.on())
@@ -557,7 +558,7 @@ func listWorktreesOn(host, repo, group string, changes bool) ([]worktreeRow, err
 		Worktrees []worktreeRow `json:"worktrees"`
 	}
 	if err := json.Unmarshal(raw, &res); err != nil {
-		return nil, fmt.Errorf("failed to parse response: %w", err)
+		return nil, errfmt.Errorf("failed to parse response: %w", err)
 	}
 	return res.Worktrees, nil
 }
@@ -669,7 +670,7 @@ func runWorktreeRemove(target string, stash, force, keepSession, jsonOutput bool
 	}
 	var res removedWorktree
 	if err := json.Unmarshal(raw, &res); err != nil {
-		return fmt.Errorf("failed to parse response: %w", err)
+		return errfmt.Errorf("failed to parse response: %w", err)
 	}
 	fmt.Println(res.sentences())
 	return nil
@@ -816,7 +817,7 @@ func fanCallerEnv(flags []string, getenv func(string) string, environ []string) 
 			continue
 		}
 		if !have[f] {
-			return nil, fmt.Errorf("--env %s: this shell has no variable %s. Pass --env %s=VALUE to set one", f, f, f)
+			return nil, errfmt.Errorf("--env %s: this shell has no variable %s. Pass --env %s=VALUE to set one", f, f, f)
 		}
 		env[f] = getenv(f)
 	}
@@ -912,7 +913,7 @@ func runFan(o fanOptions, wait, jsonOutput bool) error {
 		TaskNote string `json:"task_note"`
 	}
 	if err := json.Unmarshal(raw, &res); err != nil {
-		return fmt.Errorf("failed to parse response: %w", err)
+		return errfmt.Errorf("failed to parse response: %w", err)
 	}
 	if !jsonOutput {
 		fmt.Printf("Started %d %s on %s%s. Each prompt is sent when its agent is ready.\n", len(res.Sessions), plural.Word(len(res.Sessions), "agent", "agents"), res.Group, t.on())
@@ -1044,7 +1045,7 @@ func runFanKeep(target string, stash, force, jsonOutput bool, merge fanKeepMerge
 		Merge   *shipMergeResult  `json:"merge"`
 	}
 	if err := json.Unmarshal(raw, &res); err != nil {
-		return fmt.Errorf("failed to parse response: %w", err)
+		return errfmt.Errorf("failed to parse response: %w", err)
 	}
 	outcomes := make([]fanKeepOutcome, 0, len(res.Removed))
 	for _, entry := range res.Removed {
@@ -1055,7 +1056,7 @@ func runFanKeep(target string, stash, force, jsonOutput bool, merge fanKeepMerge
 			Code    string `json:"code"`
 		}
 		if err := json.Unmarshal(entry, &head); err != nil {
-			return fmt.Errorf("failed to parse response: %w", err)
+			return errfmt.Errorf("failed to parse response: %w", err)
 		}
 		if !head.Removed {
 			note := head.Note
@@ -1067,7 +1068,7 @@ func runFanKeep(target string, stash, force, jsonOutput bool, merge fanKeepMerge
 		}
 		var removed removedWorktree
 		if err := json.Unmarshal(entry, &removed); err != nil {
-			return fmt.Errorf("failed to parse response: %w", err)
+			return errfmt.Errorf("failed to parse response: %w", err)
 		}
 		outcomes = append(outcomes, fanKeepOutcome{Session: head.Session, Removed: true, Note: removed.sentences()})
 	}
@@ -1151,7 +1152,7 @@ func runFanKeepLoop(host, winner string, stash, force, jsonOutput bool) error {
 		}
 		var res removedWorktree
 		if err := json.Unmarshal(raw, &res); err != nil {
-			return fmt.Errorf("failed to parse response: %w", err)
+			return errfmt.Errorf("failed to parse response: %w", err)
 		}
 		outcomes = append(outcomes, fanKeepOutcome{Session: r.Session, Removed: true, Note: res.sentences()})
 	}

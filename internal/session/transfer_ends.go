@@ -14,6 +14,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 	"github.com/Gaurav-Gosain/tuios/internal/federation"
 )
 
@@ -402,7 +403,7 @@ func writeReplyError(line []byte, host string, want int64) error {
 		return errors.New(out.Error)
 	}
 	if out.PartSize != want {
-		return fmt.Errorf("the part on %s holds %d bytes, want %d", host, out.PartSize, want)
+		return errfmt.Errorf("the part on %s holds %d bytes, want %d", host, out.PartSize, want)
 	}
 	return nil
 }
@@ -565,7 +566,7 @@ func (e fileEnd) walk(ctx context.Context, path string) (walkResult, error) {
 			Error        string        `json:"error"`
 		}
 		if err := json.Unmarshal(line, &rec); err != nil {
-			return walkResult{}, fmt.Errorf("the walk of %s did not decode: %w", path, err)
+			return walkResult{}, errfmt.Errorf("the walk of %s did not decode: %w", path, err)
 		}
 		if rec.End {
 			if rec.Code != "" {
@@ -616,7 +617,7 @@ func (e fileEnd) receiveDir(ctx context.Context) (string, error) {
 		return "", err
 	}
 	if r.Path == "" {
-		return "", fmt.Errorf("%s did not name its receive folder", e.host)
+		return "", errfmt.Errorf("%s did not name its receive folder", e.host)
 	}
 	return r.Path, nil
 }
@@ -645,7 +646,7 @@ func (e fileEnd) check(ctx context.Context, root string, rels []string, hash boo
 			return nil, err
 		}
 		if len(r.Entries) != n {
-			return nil, fmt.Errorf("file-check on %s answered %d entries for %d files", e.host, len(r.Entries), n)
+			return nil, errfmt.Errorf("file-check on %s answered %d entries for %d files", e.host, len(r.Entries), n)
 		}
 		out = append(out, r.Entries...)
 		rels = rels[n:]
@@ -785,7 +786,7 @@ func (c *hostFiles) call(ctx context.Context, verb string, params any, timeout t
 	case r = <-got:
 	case <-t.C:
 		_ = c.rw.Close()
-		return nil, fmt.Errorf("%s did not answer in %v", verb, timeout)
+		return nil, errfmt.Errorf("%s did not answer in %v", verb, timeout)
 	case <-ctx.Done():
 		_ = c.rw.Close()
 		return nil, ctx.Err()
@@ -802,7 +803,7 @@ func (c *hostFiles) call(ctx context.Context, verb string, params any, timeout t
 		} `json:"error"`
 	}
 	if err := json.Unmarshal(r.line, &resp); err != nil {
-		return nil, fmt.Errorf("the answer to %s did not decode: %w", verb, err)
+		return nil, errfmt.Errorf("the answer to %s did not decode: %w", verb, err)
 	}
 	if resp.Error != nil {
 		return nil, &VerbCallError{Code: resp.Error.Code, Message: resp.Error.Message, Hint: resp.Error.Hint}

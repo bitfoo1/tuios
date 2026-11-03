@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/Gaurav-Gosain/tuios/internal/config"
+	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 
 	"github.com/Gaurav-Gosain/tuios/internal/plural"
 	"github.com/Gaurav-Gosain/tuios/internal/session"
@@ -101,7 +102,7 @@ func runFanCompare(target string, changes, jsonOutput bool) error {
 	}
 	var res fanCompareResult
 	if err := json.Unmarshal(raw, &res); err != nil {
-		return fmt.Errorf("failed to parse response: %w", err)
+		return errfmt.Errorf("failed to parse response: %w", err)
 	}
 	fmt.Print(renderFanCompare(res, t.on(), time.Now()))
 	return nil
@@ -410,7 +411,7 @@ func runFanVerify(target, command string, timeout time.Duration, wait, jsonOutpu
 		} `json:"skipped"`
 	}
 	if err := json.Unmarshal(raw, &started); err != nil {
-		return fmt.Errorf("failed to parse response: %w", err)
+		return errfmt.Errorf("failed to parse response: %w", err)
 	}
 	if !wait {
 		if jsonOutput {
@@ -500,7 +501,7 @@ func waitFanVerify(t *verbTarget, anySession string, sessions []string) ([]fanCo
 		}
 		var res fanCompareResult
 		if err := json.Unmarshal(raw, &res); err != nil {
-			return nil, fmt.Errorf("failed to parse response: %w", err)
+			return nil, errfmt.Errorf("failed to parse response: %w", err)
 		}
 		var rows []fanCompareRow
 		running := false
@@ -552,7 +553,7 @@ refused.`,
 			for _, n := range notes {
 				s, text, ok := strings.Cut(n, "=")
 				if !ok || s == "" {
-					return fmt.Errorf("--note %q is not SESSION=TEXT", n)
+					return errfmt.Errorf("--note %q is not SESSION=TEXT", n)
 				}
 				byAttempt[s] = append(byAttempt[s], text)
 			}

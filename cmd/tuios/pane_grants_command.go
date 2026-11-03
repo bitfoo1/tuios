@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/Gaurav-Gosain/tuios/internal/config"
+	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 	"github.com/spf13/cobra"
 )
 
@@ -135,7 +136,7 @@ func runPaneGrants(jsonOutput bool) error {
 		WidenedNote   string   `json:"widened_note"`
 	}
 	if err := json.Unmarshal(raw, &res); err != nil {
-		return fmt.Errorf("failed to parse response: %w", err)
+		return errfmt.Errorf("failed to parse response: %w", err)
 	}
 	fmt.Print(describePaneGrants(res.Pane, res.Window, res.Session, res.Grants, res.Explicit, res.Mode, res.DefaultGrants))
 	if res.RestartNeeded {
@@ -208,7 +209,7 @@ func runSetPaneGrants(sessionName, window string, grants []string, reset, jsonOu
 		Previous []string `json:"previous"`
 	}
 	if err := json.Unmarshal(raw, &res); err != nil {
-		return fmt.Errorf("failed to parse response: %w", err)
+		return errfmt.Errorf("failed to parse response: %w", err)
 	}
 	what := grantList(res.Grants)
 	if !res.Explicit {

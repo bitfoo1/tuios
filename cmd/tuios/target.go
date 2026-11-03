@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 	"github.com/Gaurav-Gosain/tuios/internal/federation"
 	"github.com/Gaurav-Gosain/tuios/internal/session"
 )
@@ -51,10 +52,10 @@ func resolveTarget(sessionFlag, windowFlag string) (host, sess, window string, e
 		case !st.Qualified && sessionFlag == "":
 			host, sess = wt.Host, wt.Session
 		case !st.Qualified:
-			return "", "", "", fmt.Errorf("the window names %s:%s and the session flag names %s on this machine. Name the machine in one place",
+			return "", "", "", errfmt.Errorf("the window names %s:%s and the session flag names %s on this machine. Name the machine in one place",
 				wt.Host, wt.Session, sessionFlag)
 		case st.Host != wt.Host || st.Session != wt.Session:
-			return "", "", "", fmt.Errorf("the window names %s:%s and the session flag names %s:%s. Name one session",
+			return "", "", "", errfmt.Errorf("the window names %s:%s and the session flag names %s:%s. Name one session",
 				wt.Host, wt.Session, st.Host, st.Session)
 		}
 	}
@@ -128,14 +129,14 @@ func (t *verbTarget) explain(verb string, err error) error {
 	}
 	var call *session.VerbCallError
 	if errors.As(err, &call) && call.Code == session.ErrVerbUnknownVerb {
-		return &hostError{host: t.host, err: fmt.Errorf("tuios on %s is too old for %s. Upgrade tuios on %s", t.host, verb, t.host)}
+		return &hostError{host: t.host, err: errfmt.Errorf("tuios on %s is too old for %s. Upgrade tuios on %s", t.host, verb, t.host)}
 	}
 	explained := explainVerbError(verb, err)
 	if d, ok := errors.AsType[*diagnosticError](explained); ok {
 		d.What = "On " + t.host + ": " + d.What
 		return &hostError{host: t.host, err: d}
 	}
-	return &hostError{host: t.host, err: fmt.Errorf("tuios on %s: %w", t.host, explained)}
+	return &hostError{host: t.host, err: errfmt.Errorf("tuios on %s: %w", t.host, explained)}
 }
 
 // hostError is a verb failure another machine answered. Its message is that

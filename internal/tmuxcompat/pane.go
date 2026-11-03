@@ -3,11 +3,12 @@ package tmuxcompat
 import (
 	"bufio"
 	"encoding/json"
-	"fmt"
 	"net"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 )
 
 // The pane holder.
@@ -52,7 +53,7 @@ func RequestRespawn(dir, windowID string, req RespawnRequest) error {
 	path := paneSocket(dir, windowID)
 	conn, err := net.DialTimeout("unix", path, 2*time.Second)
 	if err != nil {
-		return fmt.Errorf("pane %s was not opened through the tmux shim, so it has no holder to respawn it", PaneID(windowID))
+		return errfmt.Errorf("pane %s was not opened through the tmux shim, so it has no holder to respawn it", PaneID(windowID))
 	}
 	defer func() { _ = conn.Close() }()
 	_ = conn.SetDeadline(time.Now().Add(10 * time.Second))
@@ -62,18 +63,18 @@ func RequestRespawn(dir, windowID string, req RespawnRequest) error {
 		return err
 	}
 	if _, err := conn.Write(append(line, '\n')); err != nil {
-		return fmt.Errorf("send the request to pane %s: %w", PaneID(windowID), err)
+		return errfmt.Errorf("send the request to pane %s: %w", PaneID(windowID), err)
 	}
 	reply, err := bufio.NewReader(conn).ReadBytes('\n')
 	if err != nil {
-		return fmt.Errorf("pane %s did not answer: %w", PaneID(windowID), err)
+		return errfmt.Errorf("pane %s did not answer: %w", PaneID(windowID), err)
 	}
 	var r respawnReply
 	if err := json.Unmarshal(reply, &r); err != nil {
-		return fmt.Errorf("pane %s answered %q", PaneID(windowID), strings.TrimSpace(string(reply)))
+		return errfmt.Errorf("pane %s answered %q", PaneID(windowID), strings.TrimSpace(string(reply)))
 	}
 	if !r.OK {
-		return fmt.Errorf("pane %s: %s", PaneID(windowID), r.Error)
+		return errfmt.Errorf("pane %s: %s", PaneID(windowID), r.Error)
 	}
 	return nil
 }

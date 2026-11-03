@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/Gaurav-Gosain/tuios/internal/errfmt"
 	"github.com/Gaurav-Gosain/tuios/internal/lazyre"
 )
 
@@ -98,7 +99,7 @@ func flatManaged(root *orderedObject) ([]managedEntry, error) {
 	}
 	hooks, err := parseObject(raw)
 	if err != nil {
-		return nil, fmt.Errorf("hooks is not an object: %w", err)
+		return nil, errfmt.Errorf("hooks is not an object: %w", err)
 	}
 	var out []managedEntry
 	for _, event := range hooks.keys {
@@ -131,7 +132,7 @@ func (f flatHooks) apply(t *Target, have []byte, tuios string, install bool) ([]
 	if raw, ok := root.get("hooks"); ok {
 		hadHooks = true
 		if hooks, err = parseObject(raw); err != nil {
-			return nil, false, false, fmt.Errorf("hooks is not an object: %w", err)
+			return nil, false, false, errfmt.Errorf("hooks is not an object: %w", err)
 		}
 	}
 	removedAny := false
@@ -301,7 +302,7 @@ func (f namedBlock) apply(t *Target, have []byte, tuios string, install bool) ([
 		if !install {
 			return nil, false, false, nil
 		}
-		return nil, false, false, fmt.Errorf("its %q entry was not written by tuios, so it is left alone", f.key)
+		return nil, false, false, errfmt.Errorf("its %q entry was not written by tuios, so it is left alone", f.key)
 	}
 	if install {
 		want, err := f.block(t, tuios)
