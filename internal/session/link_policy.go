@@ -184,6 +184,7 @@ var verbCapabilities = map[string]linkCaps{
 	"new-worktree": {config.LinkAllowOpen},
 	"fan":          {config.LinkAllowOpen},
 	"start-agent":  {config.LinkAllowOpen},
+	"delegate":     {config.LinkAllowOpen},
 	"new-window":   {config.LinkAllowOpen},
 	"split-window": {config.LinkAllowOpen},
 	"popup":        {config.LinkAllowOpen},
