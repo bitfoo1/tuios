@@ -12553,3 +12553,16 @@ colocated and not, and folds it. Run on 2026-11-02 on macOS with jj 0.46.0:
 | Run on 2026-11-03: `childproc.OwnGroup` and `WaitDelay` cut from `readJJ` | `TestJJTimeoutHoldsWithAHungChild` (unit, `internal/gitstate`) | readJJ returned after about 20 s, the fake jj's child, not within `countTimeout` | **caught** |
 
 The frames are `rail-jj-repo-row-*` under the test's artifact folder.
+
+## Send now or queue in the reply box
+
+`TestCockpitReplyEditorStdout` (its `replySendNowOrQueue` half) opens the
+reply box on an agent at rest, then sets it working. enter queues a reply.
+alt+enter types a second reply into the pane while the agent still works, and
+the queue keeps only the first. Run on 2026-11-04:
+
+| Control | Test | Where it fails | Verdict |
+|---|---|---|---|
+| `composer.EventSendNow` routed to `InboxReplySend`, the queue path | `TestCockpitReplyEditorStdout` | "ASSERTION: alt+enter did not type the reply into the working agent's pane" | **caught** |
+
+The frames are `reply-send-*` under the test's artifact folder.
