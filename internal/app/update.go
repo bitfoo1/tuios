@@ -2094,6 +2094,8 @@ func (m *OS) handleMsg(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
 			// Typing means the person has moved on from the message the
 			// pointer may be resting on, so its hold ends.
 			m.NotifHoldEnd()
+			// And from a finished worktree setup's card.
+			m.hideSetupCard()
 		case tea.MouseWheelMsg:
 			m.notePointerEvent(time.Now())
 		case tea.MouseClickMsg:

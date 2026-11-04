@@ -12553,3 +12553,23 @@ colocated and not, and folds it. Run on 2026-11-02 on macOS with jj 0.46.0:
 | Run on 2026-11-03: `childproc.OwnGroup` and `WaitDelay` cut from `readJJ` | `TestJJTimeoutHoldsWithAHungChild` (unit, `internal/gitstate`) | readJJ returned after about 20 s, the fake jj's child, not within `countTimeout` | **caught** |
 
 The frames are `rail-jj-repo-row-*` under the test's artifact folder.
+## Worktree setup holds, releases and undoes
+
+`TestWorktreeSetupSyncFailureRemoves` makes worktrees whose sync setup fails.
+The worktree and the branch the call made must go. A branch that was there
+before, and a worktree with a change in it, must stay. The agent must never
+start. `TestWorktreeSetupAsync` runs an async setup that waits on a gate file.
+The agent must start while the setup still runs. A failed async setup must
+keep the worktree and the branch.
+
+Run on 2026-11-04 on Linux. The tests pass on the branch head. Each control is
+the branch head with one change, built with `go build -overlay`:
+
+| Control | Test | Where it fails | Verdict |
+|---|---|---|---|
+| `undoFailedSetup` returns before it removes anything | `TestWorktreeSetupSyncFailureRemoves` | "the failed sync setup's record is ... want removed, branch_removed and agent not_started", "the worktree folder is still there after the sync setup failed", "the branch feat/broken is still there after the sync setup failed" | **caught** |
+| `createWorktreeSession` does not start the agent of an async setup at once | `TestWorktreeSetupAsync` | "the agent did not start while the async setup ran" | **caught** |
+
+The frames are `setup-running`, `setup-passed` and `setup-failed` under
+`TUIOS_E2E_FRAMES`, in the test's folder. Repeat from `e2e/tui` with
+`TUIOS_E2E=1 TUIOS_E2E_BIN=/path/to/tuios go test -count=1 -run '^TestWorktreeSetup' -v .`.

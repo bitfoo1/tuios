@@ -176,7 +176,12 @@ func worktreePathFor(template, root, branch string) (string, *verbError) {
 // it away because a session failed to start would be removing something the
 // caller asked for and can still use. The session gets the caller's terminal
 // from its hello, as one made by new-session does.
-func (d *Daemon) createWorktreeSession(cs *connState, root, branch, base, sessionName string, command, env []string, grants *Grants, record func(*WorktreeInfo)) (map[string]any, *verbError) {
+//
+// A setup (see verb_worktree_setup.go) runs in a window of its own first. A
+// sync one holds the agent's window until it passes, so the result then has
+// no window_id and says agent_pending. onAgent runs once the agent's window
+// is open, now or after the setup.
+func (d *Daemon) createWorktreeSession(cs *connState, root, branch, base, sessionName string, command, env []string, grants *Grants, setup setupSpec, record func(*WorktreeInfo), onAgent func(*Session, WindowState)) (map[string]any, *verbError) {
 	template := d.worktreeTemplate()
 	path, verr := worktreePathFor(template, root, branch)
 	if verr != nil {
@@ -236,6 +241,9 @@ func (d *Daemon) createWorktreeSession(cs *connState, root, branch, base, sessio
 	if record != nil {
 		record(info)
 	}
+	if setup.Command != "" {
+		info.Setup = &WorktreeSetup{Command: setup.Command, Async: setup.Async, State: SetupPending, Agent: SetupAgentWaiting, Shell: len(command) == 0}
+	}
 	// The record goes on before the window, so a client that adopts the
 	// session on the window's push already sees it under its repository.
 	_ = sess.SetWorktree(info)
@@ -250,15 +258,17 @@ func (d *Daemon) createWorktreeSession(cs *connState, root, branch, base, sessio
 
 	sessionID := sess.ID
 	onExit := func(ptyID string) { d.notifyPTYClosed(sessionID, ptyID) }
-	win, err := sess.AddDaemonWindowWith(NewWindowOptions{
-		Cwd:     path,
-		Focus:   true,
-		Command: command,
-		Env:     env,
-		Grants:  grants,
-	}, onExit)
-	if err != nil {
-		return nil, hintedVerbError(ErrVerbInternal, "the worktree and session were created but the first window could not start: "+err.Error(), &VerbHint{
+	startAgent := func() (WindowState, error) {
+		return sess.AddDaemonWindowWith(NewWindowOptions{
+			Cwd:     path,
+			Focus:   true,
+			Command: command,
+			Env:     env,
+			Grants:  grants,
+		}, onExit)
+	}
+	agentFailed := func(err error) *verbError {
+		return hintedVerbError(ErrVerbInternal, "the worktree and session were created but the first window could not start: "+err.Error(), &VerbHint{
 			Detail: "Both are kept. Open a window in the session with: tuios new-window -s " + sessionName + " --cwd " + path,
 		})
 	}
@@ -270,8 +280,51 @@ func (d *Daemon) createWorktreeSession(cs *connState, root, branch, base, sessio
 		"branch":         branch,
 		"created_branch": created,
 		"path":           path,
-		"window_id":      win.ID,
-		"pty_id":         win.PTYID,
+	}
+	var win WindowState
+	if setup.Command == "" {
+		if win, err = startAgent(); err != nil {
+			return nil, agentFailed(err)
+		}
+	} else {
+		// An async setup's agent opens first, so it has the focus and the
+		// first place in the session.
+		if setup.Async {
+			if win, err = startAgent(); err != nil {
+				return nil, agentFailed(err)
+			}
+		}
+		setupWin, err := d.startWorktreeSetup(setupLaunch{
+			sess: sess, info: info, created: created, spec: setup, env: env,
+			agent: startAgent, onAgent: onAgent,
+		})
+		if err != nil {
+			// The setup never ran, so nothing is undone. An async setup's
+			// agent runs, and a sync one's can be started by hand.
+			agent := SetupAgentNotStarted
+			if setup.Async {
+				agent = SetupAgentStarted
+			} else {
+				sess.setPromptIfWaiting(PromptNotSent, "The setup window could not start, so the agent did not start.")
+			}
+			sess.setWorktreeSetup(&WorktreeSetup{Command: setup.Command, Async: setup.Async, State: SetupFailed, Agent: agent, Shell: len(command) == 0, Note: "The setup window could not start: " + err.Error()})
+			out["setup_error"] = err.Error()
+		} else {
+			out["setup_window_id"] = setupWin.ID
+			if setup.Async {
+				sess.setWorktreeSetupAgent(SetupAgentStarted)
+			}
+		}
+		out["setup"] = sess.worktreeSetupOrEmpty()
+	}
+	if win.ID != "" {
+		out["window_id"] = win.ID
+		out["pty_id"] = win.PTYID
+		if onAgent != nil {
+			onAgent(sess, win)
+		}
+	} else {
+		out["agent_pending"] = true
 	}
 	if hookErr != "" {
 		out["hook_error"] = hookErr
@@ -345,8 +398,13 @@ func (d *Daemon) verbNewWorktree(cs *connState, params json.RawMessage) (any, *v
 		Base    string   `json:"base"`
 		Name    string   `json:"name"`
 		Command []string `json:"command"`
+		setupParam
 	}
 	if verr := decodeParams(params, &p); verr != nil {
+		return nil, verr
+	}
+	setup, verr := d.resolveSetup(p.setupParam)
+	if verr != nil {
 		return nil, verr
 	}
 	branch := strings.TrimSpace(p.Branch)
@@ -360,12 +418,12 @@ func (d *Daemon) verbNewWorktree(cs *connState, params json.RawMessage) (any, *v
 	if verr != nil {
 		return nil, verr
 	}
-	out, verr := d.createWorktreeSession(cs, root, branch, strings.TrimSpace(p.Base), strings.TrimSpace(p.Name), p.Command, nil, nil, nil)
+	startedBy := d.startedByLater(cs)
+	out, verr := d.createWorktreeSession(cs, root, branch, strings.TrimSpace(p.Base), strings.TrimSpace(p.Name), p.Command, nil, nil, setup, nil, func(_ *Session, win WindowState) {
+		startedBy(win.ID)
+	})
 	if verr != nil {
 		return nil, verr
-	}
-	if id, _ := out["window_id"].(string); id != "" {
-		d.noteStartedBy(cs, id)
 	}
 	out["type"] = "worktree_created"
 	if cloned {
@@ -443,6 +501,13 @@ func (d *Daemon) verbListWorktrees(_ *connState, params json.RawMessage) (any, *
 		if wt.PR != nil {
 			row["pr"] = wt.PR
 		}
+		if wt.Setup != nil {
+			if sess := d.manager.GetSession(s.Name); sess != nil {
+				row["setup"] = d.setupReport(sess, wt.Setup)
+			} else {
+				row["setup"] = wt.Setup
+			}
+		}
 		if p.Changes && !wt.Gone {
 			// A git status per worktree, only when asked for: the rail never
 			// asks, and a listing an agent polls should not run git it did not
@@ -508,6 +573,9 @@ func (d *Daemon) verbRemoveWorktree(cs *connState, params json.RawMessage) (any,
 	if verr != nil {
 		return nil, verr
 	}
+	// A setup still running here stops being watched, so its undo does not
+	// race this removal.
+	d.setups.halt(sess.ID)
 	// Resolved now, while the directory is there to resolve.
 	notesRoot := canonRoot(info.Path)
 	killed := false
@@ -722,8 +790,13 @@ func (d *Daemon) verbFan(cs *connState, params json.RawMessage) (any, *verbError
 		Task         string            `json:"task"`
 		TaskSession  string            `json:"task_session"`
 		HumanNonce   string            `json:"human_nonce"`
+		setupParam
 	}
 	if verr := decodeParams(params, &p); verr != nil {
+		return nil, verr
+	}
+	setup, verr := d.resolveSetup(p.setupParam)
+	if verr != nil {
 		return nil, verr
 	}
 	// What every new pane may do through tuios, decided before anything is
@@ -874,9 +947,16 @@ func (d *Daemon) verbFan(cs *connState, params json.RawMessage) (any, *verbError
 		out["task_note"] = note
 		return note
 	}
+	startedBy := d.startedByLater(cs)
 	for i, branch := range branches {
 		launch, prompt := launches[i%len(launches)], promptFor(i)
-		out, verr := d.createWorktreeSession(cs, root, branch, strings.TrimSpace(p.Base), "", launch.argv, env, grants, func(info *WorktreeInfo) {
+		// The prompt is typed once the agent's window is open: at once, or
+		// after a sync setup passes.
+		onAgent := func(sess *Session, win WindowState) {
+			startedBy(win.ID)
+			go d.deliverFanPrompt(sess, win.ID, launch.harness, prompt, readyTimeout)
+		}
+		out, verr := d.createWorktreeSession(cs, root, branch, strings.TrimSpace(p.Base), "", launch.argv, env, grants, setup, func(info *WorktreeInfo) {
 			info.Group = stem
 			info.FanID = fanID
 			info.LaunchedFrom = launchedFrom
@@ -884,7 +964,7 @@ func (d *Daemon) verbFan(cs *connState, params json.RawMessage) (any, *verbError
 			info.Prompt = prompt
 			info.PromptStatus = PromptPending
 			info.Agent = launch.spec
-		})
+		}, onAgent)
 		if verr != nil {
 			if len(sessions) > 0 {
 				names := make([]string, 0, len(sessions))
@@ -902,10 +982,7 @@ func (d *Daemon) verbFan(cs *connState, params json.RawMessage) (any, *verbError
 			}
 			return nil, verr
 		}
-		sess := d.manager.GetSession(out["session"].(string))
-		windowID := out["window_id"].(string)
-		d.noteStartedBy(cs, windowID)
-		go d.deliverFanPrompt(sess, windowID, launch.harness, prompt, readyTimeout)
+		windowID, _ := out["window_id"].(string)
 		if w, ok := out["warning"].(string); ok && !slices.Contains(warnings, w) {
 			warnings = append(warnings, w)
 		}
@@ -916,6 +993,12 @@ func (d *Daemon) verbFan(cs *connState, params json.RawMessage) (any, *verbError
 			"window_id": windowID,
 			"agent":     launch.harness,
 			"command":   launch.command(),
+		}
+		if rec, ok := out["setup"]; ok {
+			row["setup"] = rec
+		}
+		if pending, ok := out["agent_pending"]; ok {
+			row["agent_pending"] = pending
 		}
 		if hookErr, ok := out["hook_error"]; ok {
 			row["hook_error"] = hookErr
