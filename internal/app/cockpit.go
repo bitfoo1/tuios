@@ -1286,6 +1286,9 @@ func (m *OS) cockpitAction(action string) tea.Cmd {
 			}
 			return nil
 		}
+		if ids, ok := strings.CutPrefix(action, "kid:"); ok {
+			return m.cockpitChildClick(ids)
+		}
 		if id, ok := strings.CutPrefix(action, "fold:"); ok {
 			if t := m.cockpitThread(); t != nil {
 				if t.folded == nil {
@@ -1544,7 +1547,12 @@ func (m *OS) CockpitKey(action string) (tea.Cmd, bool) {
 	case config.ActionInboxFilter:
 		m.CockpitCycleFilter()
 		return nil, true
+	case config.ActionInboxChild:
+		return nil, m.CockpitNextChild()
 	case config.ActionInboxGo:
+		if cmd, ok := m.cockpitChildGo(); ok {
+			return cmd, true
+		}
 		// enter on a folded group's heading opens the group.
 		if r, ok := m.cockpitSelected(); ok && r.kind == ckRowHead {
 			m.CockpitFold()

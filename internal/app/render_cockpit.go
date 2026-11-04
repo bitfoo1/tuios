@@ -1748,6 +1748,9 @@ func (m *OS) cockpitHints(now time.Time) []overlay.Hint {
 		if r.hasItem && r.item.Kind == session.AttentionMail {
 			goLabel = "open"
 		}
+		if t := m.cockpitThread(); t != nil && t.pill != "" {
+			goLabel = "open agent"
+		}
 		hints = append(hints, m.keyHints(config.ActionInboxGo, goLabel)...)
 		if label := m.settleLabel(r); label != "" {
 			hints = append(hints, m.keyHints(config.ActionInboxSettle, label)...)
@@ -1780,6 +1783,7 @@ func (m *OS) cockpitHints(now time.Time) []overlay.Hint {
 		if m.ckFanSession() != "" {
 			hints = append(hints, m.keyHints(config.ActionInboxCompare, "compare")...)
 		}
+		hints = append(hints, m.ckChildHints()...)
 	}
 	board := "board"
 	if st.ck.board {

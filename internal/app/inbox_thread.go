@@ -119,6 +119,9 @@ type agentThread struct {
 	scroll    int
 	// cards are the entries' cards as last built, by entry id.
 	cards map[string]ckCard
+	// pill is the child pill under the pill cursor, "" for none. See
+	// cockpit_thread_kids.go.
+	pill string
 }
 
 // threadBodyKey is what a thread's drawn lines depend on.
@@ -130,6 +133,8 @@ type threadBodyKey struct {
 	ascii               bool
 	title, message      string
 	expand, changes     bool
+	// kids is ckKidsSig: the child pills' inputs.
+	kids uint64
 }
 
 // threadsState is the threads kept and the transcript subscription.
@@ -540,6 +545,7 @@ func (m *OS) threadBody(e sidebarAgentEntry, width, room int, now time.Time) []s
 		width: width, minute: m.threadMinute(e, now), ascii: overlay.UseASCII(),
 		title: e.Title + "\x00" + e.Host, message: e.Message,
 		expand: t.expandAll, changes: m.cockpitTab() == "Changes",
+		kids: m.ckKidsSig(e, t),
 	}
 	if t.body != nil && t.bodyAt == key {
 		return t.body
