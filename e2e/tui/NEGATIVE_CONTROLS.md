@@ -12595,3 +12595,17 @@ colocated and not, and folds it. Run on 2026-11-02 on macOS with jj 0.46.0:
 | Run on 2026-11-03: `childproc.OwnGroup` and `WaitDelay` cut from `readJJ` | `TestJJTimeoutHoldsWithAHungChild` (unit, `internal/gitstate`) | readJJ returned after about 20 s, the fake jj's child, not within `countTimeout` | **caught** |
 
 The frames are `rail-jj-repo-row-*` under the test's artifact folder.
+
+## A new pane starts in the calling pane's folder
+
+`TestNewWindowFromAPaneStartsInThatPanesFolder` opens two panes in two
+folders, with the focus on the second. The first pane runs
+`tuios new-window probe --no-focus`. The probe must start in the first pane's
+folder, and a window opened outside every pane must start in the focused
+pane's folder.
+
+Run on 2026-11-04 on Linux. The fixed build passes in 0.6 s.
+
+| Claim | Control | Where it fails | Verdict |
+| --- | --- | --- | --- |
+| new-window from a pane starts in the caller's folder | the `CallerCwd` line cut from `verbNewWindow` | "the window a pane in `<dir>/agent-dir` opened starts in `<dir>/person-dir`" | **caught** |
