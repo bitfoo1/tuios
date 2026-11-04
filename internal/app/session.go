@@ -1374,6 +1374,7 @@ func (m *OS) updateWindowFromState(w *terminal.Window, ws *session.WindowState) 
 	w.AgentKind = ws.AgentKind
 	w.AgentHarness = ws.AgentHarness
 	w.StartedBySession, w.StartedByWindow = startedByFromWire(ws.StartedBy)
+	w.AgentChild = ws.AgentLink != nil
 	w.AgentMeta = agentMetaFromWire(w.AgentMeta, ws.AgentMeta)
 	w.AgentQueued = ws.AgentQueued
 	w.AgentDraftHeld = ws.AgentDraftHeld
@@ -1515,6 +1516,7 @@ func adoptWindowState(window *terminal.Window, ws session.WindowState) {
 	window.AgentKind = ws.AgentKind
 	window.AgentHarness = ws.AgentHarness
 	window.StartedBySession, window.StartedByWindow = startedByFromWire(ws.StartedBy)
+	window.AgentChild = ws.AgentLink != nil
 	window.AgentMeta = agentMetaFromWire(nil, ws.AgentMeta)
 	window.AgentQueued = ws.AgentQueued
 	window.AgentDraftHeld = ws.AgentDraftHeld

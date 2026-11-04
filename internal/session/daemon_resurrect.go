@@ -319,6 +319,7 @@ func (d *Daemon) restoreSessionOffers(state *SessionState) (*Session, []resumeOf
 	ids := make(map[string]WindowState, len(kept))
 	grants := make(map[string][]string)
 	startedBy := make(map[string]*PaneRef)
+	agentLinks := make(map[string]*AgentLink)
 	var notes map[string]string // most panes have none
 	for _, w := range kept {
 		if w.Note != "" {
@@ -332,6 +333,9 @@ func (d *Daemon) restoreSessionOffers(state *SessionState) (*Session, []resumeOf
 		}
 		if w.StartedBy != nil {
 			startedBy[w.ID] = w.StartedBy
+		}
+		if w.AgentLink != nil {
+			agentLinks[w.ID] = w.AgentLink
 		}
 		if w.AgentSessionID == "" {
 			continue
@@ -425,12 +429,16 @@ func (d *Daemon) restoreSessionOffers(state *SessionState) (*Session, []resumeOf
 			return nil
 		})
 	}
-	// Which pane started each pane goes back on for the same reason.
-	if len(startedBy) > 0 {
+	// Which pane started each pane goes back on for the same reason, and
+	// with it the agent link.
+	if len(startedBy) > 0 || len(agentLinks) > 0 {
 		_ = sess.mutateState(func(st *SessionState) error {
 			for i := range st.Windows {
 				if ref, ok := startedBy[st.Windows[i].ID]; ok {
 					st.Windows[i].StartedBy = ref
+				}
+				if link, ok := agentLinks[st.Windows[i].ID]; ok {
+					st.Windows[i].AgentLink = link
 				}
 			}
 			return nil
