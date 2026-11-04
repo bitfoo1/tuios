@@ -12604,13 +12604,14 @@ writes its answers to `handoff.json` in its artifact folder.
 
 `TestChildAgentRowsNestUnderTheirParent` now also reads the headline under
 each parent row. In the chain, each parent's headline ("2 agents · 2 idle",
-"1 agent · 1 idle") must sit on the row under it, with the child after it. A
+"1 agent · 1 idle") must sit on the line under it, with the child on the
+next line: no row of the chain has a note, so no row may take two lines. A
 lead with four children in mixed states must read "4 agents · 1 needs you · 2
 working · 1 done", and a click on the headline must fold the children's rows
 away and open them again. In the cockpit, the lead's thread must draw a pill
 per child, its name and then its state, under the Task card and under the
-shell command that started the four. "." must select a pill, and enter must
-open that child's thread. The same runs in a 16 colour client.
+shell command that started the four. "." must select a pill, the footer must
+read "open child" and "next child", and enter must open that child's thread. The same runs in a 16 colour client.
 
 Run on 2026-11-04 on Linux. The test passes on the branch head. Each control
 was built into its own binary:
@@ -12619,6 +12620,7 @@ was built into its own binary:
 | --- | --- | --- |
 | `sidebarKinHeads` returns the rows as they are | `ASSERTION: the rail never listed gen0 under its headline` | **caught** |
 | The thread draws no pill lines (`ckPillLines` cut from the tool card) | `ASSERTION: the lead's thread has no child pills` | **caught** |
+| The headline counts as a row with a note (`sidebarAgentsHaveNotes` without its `e.Kin == ""` test), so a chain with no notes turns two lines a row | `ASSERTION: the agent rows are gen2 at 35:3, its headline at 37, ...` | **caught** |
 
 The frames are `agent-child-rows`, `agent-kin-rows`, `agent-kin-folded`,
 `agent-kin-rows-16` under `TUIOS_E2E_FRAMES`, and `agent-kin-pills`,

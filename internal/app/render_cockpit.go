@@ -1749,7 +1749,7 @@ func (m *OS) cockpitHints(now time.Time) []overlay.Hint {
 			goLabel = "open"
 		}
 		if t := m.cockpitThread(); t != nil && t.pill != "" {
-			goLabel = "open agent"
+			goLabel = "open child"
 		}
 		hints = append(hints, m.keyHints(config.ActionInboxGo, goLabel)...)
 		if label := m.settleLabel(r); label != "" {

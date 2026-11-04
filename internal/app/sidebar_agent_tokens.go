@@ -425,8 +425,10 @@ func (m *OS) sidebarAgentsHaveNotes(agents []sidebarAgentEntry, variant int) boo
 	for _, e := range agents {
 		// A subagent's row has a second line, its tool or how it ended,
 		// unless appearance.sidebar.subagent_fields leaves the note out.
-		// The heading over the rows has none.
-		if (!e.Head && e.sidebarSubRow() && m.Settings.SidebarSubagents.Fields.Note) || len(m.sidebarAgentTokensFor(e, variant, true, now).Note) > 0 {
+		// The heading over the rows has none, and nor does a children's
+		// headline: its line of names is drawn only when the section is
+		// tall for another reason.
+		if (!e.Head && e.Kin == "" && e.sidebarSubRow() && m.Settings.SidebarSubagents.Fields.Note) || len(m.sidebarAgentTokensFor(e, variant, true, now).Note) > 0 {
 			return true
 		}
 	}

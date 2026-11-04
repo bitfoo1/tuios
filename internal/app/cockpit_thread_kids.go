@@ -363,7 +363,7 @@ func (m *OS) cockpitOpenAgent(key string) tea.Cmd {
 }
 
 // ckChildHints are the footer's hints for the pills: the step key while the
-// thread has pills that open. Enter's own hint says "open agent" while a pill
+// thread has pills that open. Enter's own hint says "open child" while a pill
 // is under the cursor.
 func (m *OS) ckChildHints() []overlay.Hint {
 	e, ok := m.cockpitAgent()
@@ -372,10 +372,10 @@ func (m *OS) ckChildHints() []overlay.Hint {
 		return nil
 	}
 	if t.pill != "" {
-		return m.keyHints(config.ActionInboxChild, "next agent")
+		return m.keyHints(config.ActionInboxChild, "next child")
 	}
 	if len(m.ckOpenablePills(e, t)) == 0 {
 		return nil
 	}
-	return m.keyHints(config.ActionInboxChild, "child agents")
+	return m.keyHints(config.ActionInboxChild, "next child")
 }

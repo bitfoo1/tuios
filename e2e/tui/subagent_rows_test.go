@@ -484,17 +484,18 @@ func TestChildAgentRowsNestUnderTheirParent(t *testing.T) {
 	h1, _ := rowAt(s, "1 agent · 1 idle")
 	y0, x0 := rowAt(s, "gen0")
 	ys, xs := rowAt(s, "sib1")
-	// A row is one or two lines, as the section has room: the step is
-	// what one row takes. gen2's family is one block: its headline, then
-	// gen1 with its own headline and gen0, and sib1 before or after them.
-	step := h2 - y2
+	// No row of the chain has a note, so every row is one line: a
+	// headline must not make the section tall. gen2's family is one
+	// block: its headline, then gen1 with its own headline and gen0, and
+	// sib1 before or after them.
+	step := 1
 	block := []int{h2, y1, h1, y0, ys}
 	slices.Sort(block)
 	tight := true
 	for i, y := range block {
 		tight = tight && y == y2+step*(i+1)
 	}
-	if y2 < 0 || step < 1 || step > 2 || !tight || h1 != y1+step || y0 != h1+step || x1 <= x2 || xs != x1 || x0 <= x1 {
+	if y2 < 0 || h2 != y2+step || !tight || h1 != y1+step || y0 != h1+step || x1 <= x2 || xs != x1 || x0 <= x1 {
 		t.Errorf("ASSERTION: the agent rows are gen2 at %d:%d, its headline at %d, gen1 at %d:%d, its headline at %d, gen0 at %d:%d, sib1 at %d:%d; want each parent's headline on the next row and its children after it, stepped in further than their parent\n%s",
 			y2, x2, h2, y1, x1, h1, y0, x0, ys, xs, strings.Join(railOf(s), "\n"))
 	}
@@ -676,7 +677,7 @@ func cockpitPills(t *testing.T, term *tuitest.Terminal, name, frames string) {
 	if err := term.SendKeys("."); err != nil {
 		t.Fatal(err)
 	}
-	if err := term.WaitForText("open agent", uiTimeout); err != nil {
+	if err := term.WaitFor(func(s tuitest.Screen) bool { return containsAll(s.Text(), "open child", "next child") }, uiTimeout); err != nil {
 		t.Fatalf("ASSERTION: . selected no pill: %v\n%s", err, term.Snapshot())
 	}
 	_ = term.WaitStable(uiTimeout)
