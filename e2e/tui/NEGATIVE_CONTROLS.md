@@ -12595,3 +12595,21 @@ colocated and not, and folds it. Run on 2026-11-02 on macOS with jj 0.46.0:
 | Run on 2026-11-03: `childproc.OwnGroup` and `WaitDelay` cut from `readJJ` | `TestJJTimeoutHoldsWithAHungChild` (unit, `internal/gitstate`) | readJJ returned after about 20 s, the fake jj's child, not within `countTimeout` | **caught** |
 
 The frames are `rail-jj-repo-row-*` under the test's artifact folder.
+
+## set-config --no-save keeps a value out of every save
+
+`TestSetConfigWithNoClientAppliesOnAttach` ends with `set-config --no-save
+appearance.sidebar.enabled false`, then a saved `set-config
+appearance.border_style double`. The rail must be hidden, config.toml must
+get `border_style = "double"`, and `[appearance.sidebar]` in config.toml must
+not get `enabled`. Run on 2026-11-04 on Linux, each control against the
+branch head with one change:
+
+| Control | Where it fails | Verdict |
+| --- | --- | --- |
+| A build of main at 536b1b9eb | `set-config --no-save`: "unknown flag: --no-save" | **caught** |
+| `skipHeld` cut from `saveConfigData`, so a save writes the held key | "a save of border_style wrote the sidebar value set with --no-save", with `enabled = false` under `[appearance.sidebar]` | **caught** |
+| The client takes the saving branch for every `set_config`, so `ConfigNoSave` is ignored | the same assertion, with `enabled = false` | **caught** |
+
+The frame is `no-save-rail-hidden` and the file is `config.toml` under the
+test's artifact folder.
