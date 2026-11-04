@@ -64,7 +64,13 @@ type paletteItem struct {
 	hits  []int  // the title's bytes the query matched
 	words string // what finds it besides its title and detail, unshown
 	top   bool   // what the query asks for outright, before any match
+	// danger marks a command that ends or deletes something: its title
+	// is in the danger colour.
+	danger bool
 }
+
+// paletteDanger are the commands that end or delete something.
+var paletteDanger = map[string]bool{"app.quitAll": true, "session.close": true}
 
 func (a *App) openPalette() {
 	a.pal = paletteState{open: true, reveal: true, gen: a.pal.gen + 1}
@@ -187,7 +193,12 @@ func (a *App) paletteItems() []paletteItem {
 	for _, g := range a.groups() {
 		for _, s := range g.sessions {
 			id := s.ID
+			// The project's name, unless it is the group's own word
+			// ("Sessions"), which the header over the rows says already.
 			detail := names[s.Project]
+			if detail == paletteGroups[paletteSession]() {
+				detail = ""
+			}
 			if s.Process != "" {
 				detail += " · " + s.Process
 			}
@@ -195,7 +206,10 @@ func (a *App) paletteItems() []paletteItem {
 			if h.remote() {
 				detail = h.name + " · " + detail
 			}
-			it := paletteItem{session: s, title: s.DisplayName(a.set.SessionName), detail: detail + " · " + h.shortDir(s.WorkDir()),
+			if detail != "" {
+				detail += " · "
+			}
+			it := paletteItem{session: s, title: s.DisplayName(a.set.SessionName), detail: detail + h.shortDir(s.WorkDir()),
 				run: func() { delete(a.prefs.Collapsed, s.Project); a.selectSession(id) }}
 			if i := slices.Index(order, id); i >= 0 && i < 9 {
 				it.keys[0] = actions.Glyphs("CmdOrCtrl+" + itoa(i+1))
@@ -314,7 +328,7 @@ func (a *App) commandItems() []paletteItem {
 			title = t()
 		}
 		ta := tuiosOf[id]
-		cmds = append(cmds, paletteItem{title: title,
+		cmds = append(cmds, paletteItem{title: title, danger: paletteDanger[id],
 			keys:  [2]string{actions.Glyphs(actions.Keys(act, a.set.Shortcuts)), a.prefixKeys(ta)},
 			words: act.Title + " " + actionWords[id] + " " + ta + " " + config.ActionDescriptions[ta],
 			run:   func() { a.run(id, nil) }})
@@ -547,7 +561,15 @@ func (a *App) paletteView(c *ui.Context, pal *palette) {
 			}
 		})
 		ui.Box(c).Height(1).Shrink(0).Background(pal.divider)
-		list := a.pal.scroll.track(c, ui.Scroll(c.Key("results"))).Grow(1).MinHeight(0).Padding(6)
+		// One title column for every row, so that the details start at one
+		// x: as wide as the widest title in view, at most 40 % of the row.
+		rowW := width - 2*6 - 2*10
+		titleW := float32(0)
+		for i := range min(len(items), 60) {
+			titleW = max(titleW, natural(c, items[i].title, fsBody, 0)+1)
+		}
+		titleW = min(titleW, rowW*0.4)
+		list := a.pal.scroll.track(c, ui.Scroll(c.Key("results"))).Grow(1).MinHeight(0).Padding(6, 6, 18, 6)
 		reveal := a.pal.reveal
 		a.pal.reveal = false
 		list.Children(func() {
@@ -589,13 +611,19 @@ func (a *App) paletteView(c *ui.Context, pal *palette) {
 					case paletteConversation:
 						ui.Icon(c, programIcon(&proto.Pane{Agent: it.conv.Agent})).Size(14, 14).TextColor(pal.textFaint)
 					default:
-						ui.Icon(c, returnIcon).Size(14, 14).TextColor(pal.textFaint)
+						// A command has no icon of its own: the slot stays,
+						// so that every title starts at one x.
+						ui.Box(c).Size(14, 14).Shrink(0)
 					}
-					// One line each: the title gives way to its keys, the
-					// detail to both, and takes at most 45 % of the row (T3
-					// Code's palette caps it so).
-					ui.RichText(c, paletteSpans(it.title, it.hits, pal)...).FontSize(fsBody).TextColor(pal.text).
-						SingleLine().Ellipsis("…").Shrink(1).MinWidth(48).MaxWidth(320)
+					// One line each: the title in its column, the detail
+					// after it, giving way to the keys, at most 45 % of the
+					// row (T3 Code's palette caps it so).
+					col := pal.text
+					if it.danger {
+						col = pal.dangerText
+					}
+					ui.RichText(c, paletteSpans(it.title, it.hits, pal)...).FontSize(fsBody).TextColor(col).
+						SingleLine().Ellipsis("…").Width(titleW).Shrink(1).MinWidth(48)
 					oneLine(c, it.detail, fsSmall, 0).TextColor(pal.textFaint).Shrink(4).MaxWidthPercent(45)
 					ui.Spacer(c)
 					for _, k := range it.keys {
@@ -606,6 +634,10 @@ func (a *App) paletteView(c *ui.Context, pal *palette) {
 				})
 			}
 		})
+		// The list fades out at the panel's foot rather than end flush on
+		// its edge.
+		ui.Box(c.Key("foot-fade")).Absolute().Left(0).Right(0).Bottom(0).Height(12).PassThrough().
+			LinearGradient(ui.LinearGradient{Angle: 180, From: pal.popover.Alpha(0), To: pal.popover})
 	})
 	if chosen != nil {
 		a.pal.open = false
