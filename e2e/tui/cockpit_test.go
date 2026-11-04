@@ -639,16 +639,19 @@ func saveCockpitFrames(t *testing.T, term *tuitest.Terminal, name string, pics .
 // lit, the todo list is a plan with its count, and the failed command shows
 // its output. The agent's Markdown is drawn: strong, lists, a highlighted
 // code block and a link. A click on the diff's header folds it, and ] shows
-// the last turn's changes alone.
+// the last turn's changes alone. Then the transcript grows, and the thread
+// scrolls by its rules (threadFollowAndRuler).
 //
 // Negative controls, recorded in NEGATIVE_CONTROLS.md: with the changed
 // range left out of the diff lines the word check fails; with the todos
-// drawn as one line the plan check fails.
+// drawn as one line the plan check fails; with a held thread followed as if
+// it were at the bottom, the hold check fails; with { and } doing nothing,
+// the jump check fails.
 func TestCockpitThreadCards(t *testing.T) {
 	base := t.TempDir()
 	killDaemon(t, base)
 	useShippedLooks(base)
-	for _, s := range []string{"home200", "home100", "api"} {
+	for _, s := range []string{"home200", "home100", "home160", "api"} {
 		if out, err := tuiosCLI(t, base, "new", s, "--detach"); err != nil {
 			t.Fatalf("create session %s: %v\n%s", s, err, out)
 		}
@@ -782,6 +785,196 @@ func TestCockpitThreadCards(t *testing.T) {
 		}
 		alive(t, term, "after the thread cards")
 	}
+	threadFollowAndRuler(t, base, path)
+}
+
+// threadFollowAndRuler appends to the transcript of TestCockpitThreadCards
+// and checks the thread's three scroll rules and its prompt ruler: a new
+// prompt goes to the top of the thread while it follows; once its reply fills
+// the thread, the bottom is followed; the ruler marks each prompt and { and }
+// put the previous and next prompt at the top; a thread scrolled up holds
+// still while entries arrive and counts them on its last row; G shows them
+// and follows again.
+func threadFollowAndRuler(t *testing.T, base, path string) {
+	t.Helper()
+	n := 100
+	appendEntries := func(entries ...[2]string) {
+		t.Helper()
+		f, err := os.OpenFile(path, os.O_APPEND|os.O_WRONLY, 0o600)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer func() { _ = f.Close() }()
+		for _, e := range entries {
+			n++
+			var content any = e[1]
+			if e[0] == "assistant" {
+				content = []map[string]string{{"type": "text", "text": e[1]}}
+			}
+			line, _ := json.Marshal(map[string]any{
+				"type": e[0], "uuid": "f" + strconv.Itoa(n), "sessionId": "9a1f0c2e-0000-4000-8000-00000000c0c0",
+				"timestamp": fmt.Sprintf("2026-10-18T10:%02d:00.000Z", n-100),
+				"message":   map[string]any{"role": e[0], "content": content},
+			})
+			if _, err := f.Write(append(line, '\n')); err != nil {
+				t.Fatal(err)
+			}
+		}
+	}
+	notes := func(prefix string, k int) string {
+		var b strings.Builder
+		for i := 1; i <= k; i++ {
+			fmt.Fprintf(&b, "- %s note %d\n", prefix, i)
+		}
+		return b.String()
+	}
+	term := startIn(t, base, startOpts{args: []string{"attach", "home160"}, cols: 160, rows: 45, shippedLooks: true, env: []string{"TERM=xterm-256color", "COLORTERM=truecolor"}})
+	if err := term.WaitFor(func(s tuitest.Screen) bool { return countWindows(s) == 1 }, bootTimeout); err != nil {
+		t.Fatalf("client never attached: %v\n%s", err, term.Snapshot())
+	}
+	windowManagementMode(t, term)
+	if err := term.SendKeys(tuitest.Ctrl('b'), "i"); err != nil {
+		t.Fatalf("open the cockpit: %v", err)
+	}
+	if err := term.WaitForText("Running the auth tests.", uiTimeout); err != nil {
+		t.Fatalf("the thread never showed: %v\n%s", err, term.Snapshot())
+	}
+	// The thread's first row is three under the tabs: the rule, then a gap.
+	s := term.Screen()
+	tabs := rowWith(s, "Checkpoints")
+	if tabs < 0 {
+		t.Fatalf("no focus tabs\n%s", term.Snapshot())
+	}
+	first := tabs + 3
+	// 1. A new prompt goes to the top, and the reply fills under it.
+	appendEntries([2]string{"user", "Now cover the boundary at exactly 30 s."},
+		[2]string{"assistant", "Adding a table test for the boundary."})
+	if err := term.WaitForText("Adding a table test for the boundary.", uiTimeout); err != nil {
+		t.Fatalf("the new prompt never showed: %v\n%s", err, term.Snapshot())
+	}
+	_ = term.WaitStable(uiTimeout)
+	s = term.Screen()
+	if r := rowWith(s, "turn 2"); r != first {
+		t.Fatalf("ASSERTION: the new prompt is not at the top of the thread: its label is on row %d, the thread starts on row %d\n%s", r, first, term.Snapshot())
+	}
+	if rowWith(s, "Adding a table test") <= rowWith(s, "Now cover the boundary") {
+		t.Fatalf("ASSERTION: the reply is not under the prompt\n%s", term.Snapshot())
+	}
+	saveCockpitFrames(t, term, "follow-anchor")
+	// Once the reply fills the thread, the bottom is followed.
+	appendEntries([2]string{"assistant", notes("boundary", 40)})
+	if err := term.WaitForText("boundary note 40", uiTimeout); err != nil {
+		t.Fatalf("ASSERTION: the thread did not follow the reply past its height: %v\n%s", err, term.Snapshot())
+	}
+	appendEntries([2]string{"user", "Run the whole suite once more."},
+		[2]string{"assistant", notes("suite", 40)})
+	if err := term.WaitForText("suite note 40", uiTimeout); err != nil {
+		t.Fatalf("ASSERTION: the thread did not follow the third reply: %v\n%s", err, term.Snapshot())
+	}
+	_ = term.WaitStable(uiTimeout)
+	// 2. The ruler marks the three prompts, beside the view's thumb.
+	s = term.Screen()
+	cols, rows := s.Size()
+	marks, thumb := 0, 0
+	for x := cols / 2; x < cols; x++ {
+		mk, th := 0, 0
+		for y := first; y < rows-2; y++ {
+			switch s.Cell(x, y).Content {
+			case "━":
+				mk++
+			case "┃":
+				th++
+			}
+		}
+		if mk > marks {
+			marks, thumb = mk, th
+		}
+	}
+	if marks != 3 || thumb == 0 {
+		t.Fatalf("ASSERTION: the ruler shows %d prompt marks and %d thumb cells, want 3 marks and a thumb\n%s", marks, thumb, term.Snapshot())
+	}
+	saveCockpitFrames(t, term, "follow-ruler")
+	// { puts the previous prompt at the top, and } the next one.
+	jump := func(key, label string, row int) {
+		t.Helper()
+		if err := term.SendKeys(key); err != nil {
+			t.Fatal(err)
+		}
+		if err := term.WaitFor(func(s tuitest.Screen) bool { return rowWith(s, label) == row }, uiTimeout); err != nil {
+			t.Fatalf("ASSERTION: %s did not put %q on the thread's first rows (row %d): %v\n%s", key, label, row, err, term.Snapshot())
+		}
+	}
+	jump("{", "turn 3", first)
+	jump("{", "turn 2", first)
+	jump("{", "Tokens expire mid-request", first+2)
+	jump("}", "turn 2", first)
+	// 3. G follows again; a scroll up holds the thread while entries
+	// arrive, and its last row counts them.
+	if err := term.SendKeys("G"); err != nil {
+		t.Fatal(err)
+	}
+	if err := term.WaitForText("suite note 40", uiTimeout); err != nil {
+		t.Fatalf("ASSERTION: G did not show the newest lines: %v\n%s", err, term.Snapshot())
+	}
+	if err := term.SendKeys("K"); err != nil {
+		t.Fatal(err)
+	}
+	if err := term.WaitFor(func(s tuitest.Screen) bool { return !strings.Contains(s.Text(), "suite note 40") }, uiTimeout); err != nil {
+		t.Fatalf("K did not scroll the thread up: %v\n%s", err, term.Snapshot())
+	}
+	_ = term.WaitStable(uiTimeout)
+	x0 := cellColumnOf(term.Screen(), tabs, "Thread")
+	before := threadRows(term.Screen(), x0, first, rows-4)
+	appendEntries([2]string{"assistant", "First late entry."}, [2]string{"assistant", "Second late entry."},
+		[2]string{"assistant", "Third late entry."})
+	if err := term.WaitForText("3 new entries", uiTimeout); err != nil {
+		t.Fatalf("ASSERTION: the held thread does not count the new entries: %v\n%s", err, term.Snapshot())
+	}
+	_ = term.WaitStable(uiTimeout)
+	s = term.Screen()
+	after := threadRows(s, x0, first, rows-4)
+	// The rows above the one that counts the new entries are as they were.
+	moved := strings.Contains(s.Text(), "Third late entry.")
+	for i := range after {
+		if strings.Contains(after[i], "new entr") {
+			break
+		}
+		if after[i] != before[i] {
+			moved = true
+		}
+	}
+	if moved {
+		t.Fatalf("ASSERTION: the held thread moved when entries arrived\nbefore:\n%s\nafter:\n%s", strings.Join(before, "\n"), strings.Join(after, "\n"))
+	}
+	saveCockpitFrames(t, term, "follow-new-entries")
+	if err := term.SendKeys("G"); err != nil {
+		t.Fatal(err)
+	}
+	if err := term.WaitFor(func(s tuitest.Screen) bool {
+		return strings.Contains(s.Text(), "Third late entry.") && !strings.Contains(s.Text(), "new entries")
+	}, uiTimeout); err != nil {
+		t.Fatalf("ASSERTION: G did not show the new entries and remove the line: %v\n%s", err, term.Snapshot())
+	}
+	alive(t, term, "after the thread follow")
+}
+
+// threadRows is the text of rows y0 to y1 from column x0 on, without the
+// ruler, whose thumb and marks move as the thread grows.
+func threadRows(s tuitest.Screen, x0, y0, y1 int) []string {
+	cols, _ := s.Size()
+	var out []string
+	for y := y0; y <= y1; y++ {
+		var b strings.Builder
+		for x := max(x0, 0); x < cols; x++ {
+			c := s.Cell(x, y).Content
+			if c == "━" || c == "┃" || c == "" {
+				c = " "
+			}
+			b.WriteString(c)
+		}
+		out = append(out, b.String())
+	}
+	return out
 }
 
 // cockpitMarkdown checks the agent's Markdown message of cockpit-auth.jsonl
