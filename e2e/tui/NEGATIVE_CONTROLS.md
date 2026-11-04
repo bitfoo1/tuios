@@ -12553,3 +12553,24 @@ colocated and not, and folds it. Run on 2026-11-02 on macOS with jj 0.46.0:
 | Run on 2026-11-03: `childproc.OwnGroup` and `WaitDelay` cut from `readJJ` | `TestJJTimeoutHoldsWithAHungChild` (unit, `internal/gitstate`) | readJJ returned after about 20 s, the fake jj's child, not within `countTimeout` | **caught** |
 
 The frames are `rail-jj-repo-row-*` under the test's artifact folder.
+## A child agent never runs wider than its parent
+
+`TestAChildAgentNeverRunsWiderThanItsParent` runs a parent agent in a pane: a
+script named claude, started with `--permission-mode plan`, that calls
+`tuios start-agent`. A child with `--dangerously-skip-permissions` must be
+refused with no window made. A child that names no mode must start with
+`--permission-mode plan` added. The same bypass child started by the test
+process, outside every pane, must start as asked.
+
+Run on 2026-11-04 on Linux. The control is the branch build with
+`clampChildMode` returning its argv unchanged (a `go build -overlay` of
+`internal/session/child_clamp.go`):
+
+| Control | Where it fails | Verdict |
+| --- | --- | --- |
+| `clampChildMode` returns argv unchanged | "a child in bypass mode from a parent in plan mode was not refused" (`WIDE_EXIT=0`), "a child that names no mode did not start in the parent's plan mode", and "the refused child has a window" | **caught** |
+
+The record is `child-mode-clamp.txt` under `TUIOS_E2E_FRAMES`. The unit tests
+`TestAChildNeverHoldsGrantsItsParentLacks` and
+`TestAChildAgentNeverRunsWiderThanItsParent` in `internal/session` fail on
+main (2c03bb3c0) for every refusal and step down they check.
