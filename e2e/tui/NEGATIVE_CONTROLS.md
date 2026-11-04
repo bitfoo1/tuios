@@ -12553,3 +12553,20 @@ colocated and not, and folds it. Run on 2026-11-02 on macOS with jj 0.46.0:
 | Run on 2026-11-03: `childproc.OwnGroup` and `WaitDelay` cut from `readJJ` | `TestJJTimeoutHoldsWithAHungChild` (unit, `internal/gitstate`) | readJJ returned after about 20 s, the fake jj's child, not within `countTimeout` | **caught** |
 
 The frames are `rail-jj-repo-row-*` under the test's artifact folder.
+## Unseen marks and the alert baseline
+
+`TestCockpitGroupsTheFleet` (through `cockpitUnseenMarks`) checks that the rows
+of agents that finished or failed since their thread was viewed wear the unseen
+mark, that viewing a thread clears only that row's mark, and that a new client
+reads the same marks. `TestHostFocusHoldsAlertsForThePaneYouAreLookingAt`
+checks that a client attached after a turn alerted does not alert for the same
+turn's done again. Run on 2026-11-04 on Linux, each control against the branch
+head with one change:
+
+| Control | Where it fails | Verdict |
+|---|---|---|
+| `markAgentViewed` returns before it moves the watermark | `TestCockpitGroupsTheFleet`: "viewing the thread of docs-cli did not clear its mark" | **caught** |
+| The `Baseline` call cut from `considerAgentAlert` | `TestHostFocusHoldsAlertsForThePaneYouAreLookingAt`: "the new client alerted again for a run that had alerted: [\"AGENT done\"]" | **caught** |
+
+The frames are `cockpit-unseen` and `cockpit-unseen-viewed` under the test's
+artifact folder.
