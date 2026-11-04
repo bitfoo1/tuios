@@ -12595,3 +12595,22 @@ colocated and not, and folds it. Run on 2026-11-02 on macOS with jj 0.46.0:
 | Run on 2026-11-03: `childproc.OwnGroup` and `WaitDelay` cut from `readJJ` | `TestJJTimeoutHoldsWithAHungChild` (unit, `internal/gitstate`) | readJJ returned after about 20 s, the fake jj's child, not within `countTimeout` | **caught** |
 
 The frames are `rail-jj-repo-row-*` under the test's artifact folder.
+
+## The daemon keeps the machine awake while an agent works
+
+`TestKeepAwakeHoldsWhileAnAgentWorks` sets `keep_awake = "agents"` and reads
+logind's inhibitor list. A lock counts only when its `systemd-inhibit` is a
+child of the test's daemon. The lock must come when a pane works, stay while
+any pane works, and go when the panes go idle, when the working pane closes,
+and when `keep-awake off` is set. After a SIGKILL of the daemon, its holder
+must be gone. Run on 2026-11-04 on Linux (systemd 262) against the branch
+head with one change each:
+
+| Control | Where it fails | Verdict |
+| --- | --- | --- |
+| The event sink does not wake the keeper on `agent-state` and `window-closed` | "an agent works: 0 tuios inhibitor locks under daemon N, want 1" | **caught** |
+| The holder runs `sleep infinity` in place of `cat` on the daemon's pipe | "systemd-inhibit N outlived its daemon M (its parent is now 1)" | **caught** |
+
+The steps and lock counts are in `keep-awake.txt` under `TUIOS_E2E_FRAMES`,
+in the test's folder. Repeat from `e2e/tui` with
+`TUIOS_E2E=1 TUIOS_E2E_BIN=/path/to/tuios go test -count=1 -run '^TestKeepAwakeHoldsWhileAnAgentWorks$' -v .`.
