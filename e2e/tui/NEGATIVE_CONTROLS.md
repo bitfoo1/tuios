@@ -7728,6 +7728,15 @@ Run on 2026-10-18.
 | A tool result between two reads breaks the run | n/a, injected | the run stops at a `tool_result` entry | `TestCockpitThreadCards` ("the reads did not fold to one line") | **caught** |
 | The changed words are lit three cells early per tab | `ckCodeOffset`: the word offsets mapped on the raw text | the offsets taken on the text after the tab became four spaces | `TestCockpitThreadCards` ("the cell before the changed words is lit too") | **caught** |
 
+The live activity row (`cockpitActivityRow`, run from the same test on
+2026-11-04) sends a PreToolUse hook for a command the transcript does not have,
+then appends the call to the transcript, then sends a second tool and rests the
+pane.
+
+| Bug | Fix removed | How | Tests that fail | Verdict |
+|---|---|---|---|---|
+| The activity row repeats a card the transcript already shows | The newest tool call check in `transcriptview.ActivityShown` | The check never taken, so the row shows while the agent works | `TestCockpitThreadCards` ("the activity row stays when the transcript shows the call's card") | **caught** |
+
 ## The agents cockpit: reply area and image view
 
 `TestCockpitReplyAreaAndImageView` opens the reply area by a click, types,
