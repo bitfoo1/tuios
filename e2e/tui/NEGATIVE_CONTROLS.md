@@ -12603,8 +12603,8 @@ writes its answers to `handoff.json` in its artifact folder.
 ## A parent's children headline and the child pills (D15, T13)
 
 `TestChildAgentRowsNestUnderTheirParent` now also reads the headline under
-each parent row. In the chain, each parent's headline ("2 agents · 2 idle",
-"1 agent · 1 idle") must sit on the line under it, with the child on the
+each parent row. In the chain, each parent's headline ("3 agents · 3 idle",
+"1 agent · 1 idle") must sit on the line under it, with its children on the
 next line: no row of the chain has a note, so no row may take two lines. A
 lead with four children in mixed states must read "4 agents · 1 needs you · 2
 working · 1 done", and a click on the headline must fold the children's rows
