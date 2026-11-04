@@ -12600,7 +12600,7 @@ the branch head. Each control was built into its own binary.
 The frame is `agent-child-rows` under `TUIOS_E2E_FRAMES`. The upgrade test
 writes its answers to `handoff.json` in its artifact folder.
 
-## A parent's children headline and the child pills (D15, T13)
+## A parent's children headline and the child pills
 
 `TestChildAgentRowsNestUnderTheirParent` now also reads the headline under
 each parent row. In the chain, each parent's headline ("3 agents · 3 idle",
