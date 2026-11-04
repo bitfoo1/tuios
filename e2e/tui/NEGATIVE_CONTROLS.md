@@ -12474,3 +12474,17 @@ suite ran 20 times against one `tuios-web`, on two cores, once without the
 filter and once with it. Without it, 68 size messages came in late and the
 board showed the splash with a pane still open 7 times. With it, 58 came in
 late, each was put right, and the board never showed it.
+
+## A new pane starts in the calling pane's folder
+
+`TestNewWindowFromAPaneStartsInThatPanesFolder` opens two panes in two
+folders, with the focus on the second. The first pane runs
+`tuios new-window probe --no-focus`. The probe must start in the first pane's
+folder, and a window opened outside every pane must start in the focused
+pane's folder.
+
+Run on 2026-11-04 on Linux. The fixed build passes in 0.6 s.
+
+| Claim | Control | Where it fails | Verdict |
+| --- | --- | --- | --- |
+| new-window from a pane starts in the caller's folder | the `CallerCwd` line cut from `verbNewWindow` | "the window a pane in `<dir>/agent-dir` opened starts in `<dir>/person-dir`" | **caught** |
